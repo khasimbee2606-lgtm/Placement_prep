@@ -14,6 +14,8 @@ class SocketService {
           socketUrl = import.meta.env.VITE_BACKEND_URL;
         } else if (import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL.startsWith('http')) {
           socketUrl = import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '');
+        } else if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+          socketUrl = 'https://placement-prep-ku9x.onrender.com';
         }
 
         this.socket = window.io(socketUrl, {

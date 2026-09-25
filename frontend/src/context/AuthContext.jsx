@@ -30,7 +30,11 @@ export const AuthProvider = ({ children }) => {
           }
         } catch (err) {
           console.error('Session verification failed:', err);
-          logout();
+          // Only invalidate and clear session if server explicitly returned 401 (token expired/invalid)
+          // Do not log out if the server is waking up (cold start) or encountering temporary network glitches
+          if (err.response && err.response.status === 401) {
+            logout();
+          }
         }
       }
       setLoading(false);

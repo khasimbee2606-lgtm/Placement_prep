@@ -33,29 +33,37 @@ const isAllowedOrigin = (origin) => {
     'http://localhost:3000',
     'http://127.0.0.1:5173',
     'https://localhost:5173',
+    'https://placement-prep-myu8f6nap-sk-bala-khasim-bees-projects.vercel.app',
+    'https://placement-prep-ku9x.onrender.com',
   ];
 
   if (standardOrigins.includes(origin) || configuredClients.includes(origin)) {
     return true;
   }
   // Allow any Vercel deployment preview or production domain
-  if (origin.endsWith('.vercel.app')) return true;
+  if (origin.endsWith('.vercel.app') || origin.includes('vercel.app')) return true;
   // Allow any Render deployment domain
-  if (origin.endsWith('.onrender.com')) return true;
+  if (origin.endsWith('.onrender.com') || origin.includes('onrender.com')) return true;
 
-  // In production if no explicit block, allow with credentials for seamless frontend-backend link
   return true;
+};
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    callback(null, isAllowedOrigin(origin) ? (origin || true) : true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Set-Cookie'],
+  optionsSuccessStatus: 204,
 };
 
 // Socket.io initialization for real-time leaderboard and test timers
 const io = new Server(server, {
   cors: {
     origin: (origin, callback) => {
-      if (isAllowedOrigin(origin)) {
-        callback(null, true);
-      } else {
-        callback(null, true);
-      }
+      callback(null, isAllowedOrigin(origin) ? (origin || true) : true);
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
@@ -63,18 +71,8 @@ const io = new Server(server, {
 });
 
 // Middleware
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (isAllowedOrigin(origin)) {
-        callback(null, true);
-      } else {
-        callback(null, true);
-      }
-    },
-    credentials: true,
-  })
-);
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
