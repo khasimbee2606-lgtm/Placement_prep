@@ -13,6 +13,7 @@ import PracticeTracker from './pages/PracticeTracker';
 import MockTests from './pages/MockTests';
 import Analytics from './pages/Analytics';
 import Leaderboard from './pages/Leaderboard';
+import Profile from './pages/Profile';
 
 // Root redirect handler
 const RootRedirect = () => {
@@ -110,6 +111,17 @@ function App() {
               <ProtectedRoute>
                 <AppLayout>
                   <Leaderboard />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Profile />
                 </AppLayout>
               </ProtectedRoute>
             }

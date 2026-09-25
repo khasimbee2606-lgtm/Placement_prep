@@ -24,7 +24,7 @@ const Leaderboard = () => {
 
   const fetchLeaderboard = async () => {
     try {
-      const res = await API.get('/api/leaderboard');
+      const res = await API.get('/leaderboard');
       if (res.data.success) {
         setLeaderboard(res.data.leaderboard || []);
         setCurrentUserRank(res.data.currentUserRank);

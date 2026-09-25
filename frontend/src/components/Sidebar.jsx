@@ -11,7 +11,8 @@ import {
   LogOut,
   Sparkles,
   Layers,
-  GraduationCap
+  GraduationCap,
+  User
 } from 'lucide-react';
 
 const Sidebar = ({ mobileOpen, setMobileOpen }) => {
@@ -29,6 +30,7 @@ const Sidebar = ({ mobileOpen, setMobileOpen }) => {
     { to: '/tests', label: 'Mock Test Simulator', icon: FileCheck2, badge: 'TCS / Infy' },
     { to: '/analytics', label: 'Analytics & Weak Areas', icon: BarChart3 },
     { to: '/leaderboard', label: 'Live Leaderboard', icon: Trophy, badge: 'Live' },
+    { to: '/profile', label: 'Candidate Profile', icon: User },
   ];
 
   return (
@@ -65,7 +67,12 @@ const Sidebar = ({ mobileOpen, setMobileOpen }) => {
 
       {/* User Footer with Logout */}
       <div className="sidebar-footer">
-        <div className="sidebar-user">
+        <div
+          className="sidebar-user"
+          onClick={() => navigate('/profile')}
+          style={{ cursor: 'pointer' }}
+          title="View & Edit Profile"
+        >
           <div className="sidebar-user-avatar">
             {user?.name ? user.name.charAt(0).toUpperCase() : 'C'}
           </div>
@@ -76,7 +83,7 @@ const Sidebar = ({ mobileOpen, setMobileOpen }) => {
             </span>
           </div>
           <button
-            onClick={handleLogout}
+            onClick={(e) => { e.stopPropagation(); handleLogout(); }}
             className="btn-danger ml-auto"
             title="Sign Out"
             style={{ marginLeft: 'auto', padding: '0.4rem 0.6rem' }}

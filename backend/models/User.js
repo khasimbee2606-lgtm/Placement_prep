@@ -80,6 +80,31 @@ const userSchema = new mongoose.Schema(
       enum: ['user', 'admin'],
       default: 'user',
     },
+    bio: {
+      type: String,
+      default: 'Aspiring Software Engineer passionate about DSA, problem solving, and building scalable full-stack applications.',
+      trim: true,
+      maxlength: 300,
+    },
+    skills: {
+      type: [String],
+      default: ['Data Structures & Algorithms', 'JavaScript / React', 'Node.js', 'SQL / DBMS', 'Aptitude & Speed Math'],
+    },
+    github: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    linkedin: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    phone: {
+      type: String,
+      default: '',
+      trim: true,
+    },
     dailyGoals: [goalSchema],
     notifications: [notificationSchema],
   },
