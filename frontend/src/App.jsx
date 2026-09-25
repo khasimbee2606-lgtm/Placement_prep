@@ -25,7 +25,7 @@ const AppLayout = ({ children }) => {
       <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
       <div className="main-viewport">
         <Topbar toggleMobileSidebar={() => setMobileOpen(!mobileOpen)} />
-        <main className="content-area">
+        <main className="content-area page-transition">
           {children}
         </main>
       </div>

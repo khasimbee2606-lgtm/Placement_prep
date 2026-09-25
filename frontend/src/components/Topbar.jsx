@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import API from '../services/api';
 import {
@@ -7,17 +8,18 @@ import {
   Award,
   Bell,
   X,
-  AlertTriangle,
-  Target,
-  Sparkles,
-  CheckCircle2
+  Search,
+  User,
+  ExternalLink
 } from 'lucide-react';
 
 const Topbar = ({ toggleMobileSidebar }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -28,21 +30,35 @@ const Topbar = ({ toggleMobileSidebar }) => {
           setUnreadCount(res.data.notifications.length);
         }
       } catch (err) {
-        // Fallback notifications if route loading
         setNotifications([
           {
             _id: 'default-streak',
             title: '🔥 Daily Streak Active',
-            message: `You're on a ${user?.streak || 1}-day streak! Keep going today.`,
+            message: `You're on a ${user?.streak || 1}-day streak! Solve a problem today to keep it burning.`,
             type: 'streak',
           },
+          {
+            _id: 'default-test',
+            title: '🎯 Placement Mock Simulator',
+            message: 'TCS NQT and Infosys SP mock test patterns are live for your batch.',
+            type: 'test',
+          }
         ]);
-        setUnreadCount(1);
+        setUnreadCount(2);
       }
     };
 
     fetchNotifications();
   }, [user?.streak]);
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/practice?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const candidateInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'C';
 
   return (
     <header className="topbar">
@@ -54,9 +70,26 @@ const Topbar = ({ toggleMobileSidebar }) => {
         >
           <Menu size={22} />
         </button>
-        <span style={{ fontSize: '0.85rem', color: '#6ee7b7', fontWeight: 500 }}>
-          🎯 Day-1 Placement Preparation Mode
-        </span>
+
+        {/* Logo on Left */}
+        <Link to="/dashboard" className="topbar-brand" title="Campus2Career Home">
+          <img src="/logo.png" alt="Campus2Career Logo" className="topbar-logo-img" />
+          <span className="topbar-brand-name">
+            Campus<span>2</span>Career
+          </span>
+        </Link>
+
+        {/* LinkedIn-Style Search Bar */}
+        <form onSubmit={handleSearchSubmit} className="topbar-search">
+          <Search size={16} className="topbar-search-icon" />
+          <input
+            type="text"
+            placeholder="Search problems, topics, mock tests..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="topbar-search-input"
+          />
+        </form>
       </div>
 
       <div className="topbar-actions">
@@ -68,7 +101,7 @@ const Topbar = ({ toggleMobileSidebar }) => {
 
         {/* XP Points Chip */}
         <div className="stat-chip" title="Preparation Points (XP)">
-          <Award size={16} style={{ color: '#10b981' }} />
+          <Award size={16} style={{ color: '#16a34a' }} />
           <span>{user?.points || 0} XP</span>
         </div>
 
@@ -79,6 +112,7 @@ const Topbar = ({ toggleMobileSidebar }) => {
             className="btn-outline"
             style={{ padding: '0.45rem', borderRadius: '50%', position: 'relative' }}
             title="Notifications & Streak Alerts"
+            aria-label="Notifications"
           >
             <Bell size={18} />
             {unreadCount > 0 && (
@@ -87,7 +121,7 @@ const Topbar = ({ toggleMobileSidebar }) => {
                   position: 'absolute',
                   top: '-4px',
                   right: '-4px',
-                  background: '#10b981',
+                  background: '#16a34a',
                   color: 'white',
                   fontSize: '0.65rem',
                   fontWeight: 700,
@@ -97,6 +131,7 @@ const Topbar = ({ toggleMobileSidebar }) => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  boxShadow: '0 0 8px rgba(22, 163, 74, 0.5)',
                 }}
               >
                 {unreadCount}
@@ -104,7 +139,7 @@ const Topbar = ({ toggleMobileSidebar }) => {
             )}
           </button>
 
-          {/* Notifications Dropdown Drawer */}
+          {/* Clean White Notification Dropdown Drawer with subtle shadow */}
           {showNotifications && (
             <div
               style={{
@@ -112,11 +147,11 @@ const Topbar = ({ toggleMobileSidebar }) => {
                 top: '48px',
                 right: '0',
                 width: '320px',
-                background: '#0c1611',
-                border: '1px solid rgba(52, 211, 153, 0.25)',
+                background: '#ffffff',
+                border: '1px solid #e5e7eb',
                 borderRadius: '12px',
                 padding: '1rem',
-                boxShadow: '0 12px 30px rgba(0, 0, 0, 0.7)',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)',
                 zIndex: 100,
               }}
             >
@@ -125,17 +160,17 @@ const Topbar = ({ toggleMobileSidebar }) => {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderBottom: '1px solid #f3f4f6',
                   paddingBottom: '0.5rem',
                   marginBottom: '0.75rem',
                 }}
               >
-                <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#f0fdf4' }}>
-                  Alerts & Streak Warnings
+                <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#1f2937' }}>
+                  Notifications & Alerts
                 </span>
                 <button
                   onClick={() => setShowNotifications(false)}
-                  style={{ background: 'none', border: 'none', color: '#6ee7b7', cursor: 'pointer' }}
+                  style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer' }}
                 >
                   <X size={16} />
                 </button>
@@ -146,8 +181,8 @@ const Topbar = ({ toggleMobileSidebar }) => {
                   <div
                     key={notif._id || idx}
                     style={{
-                      background: 'rgba(16, 185, 129, 0.07)',
-                      border: '1px solid rgba(16, 185, 129, 0.2)',
+                      background: '#f0fdf4',
+                      border: '1px solid #dcfce7',
                       borderRadius: '8px',
                       padding: '0.65rem 0.8rem',
                       display: 'flex',
@@ -155,10 +190,10 @@ const Topbar = ({ toggleMobileSidebar }) => {
                       gap: '0.2rem',
                     }}
                   >
-                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#34d399' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#16a34a' }}>
                       {notif.title}
                     </span>
-                    <p style={{ fontSize: '0.75rem', color: '#cbd5e1', lineHeight: 1.4 }}>
+                    <p style={{ fontSize: '0.75rem', color: '#4b5563', lineHeight: 1.4 }}>
                       {notif.message}
                     </p>
                   </div>
@@ -167,6 +202,20 @@ const Topbar = ({ toggleMobileSidebar }) => {
             </div>
           )}
         </div>
+
+        {/* Right Side: Profile Avatar with Name */}
+        <Link
+          to="/profile"
+          className="topbar-avatar-btn"
+          title="View Candidate Profile"
+        >
+          <div className="topbar-avatar-circle">
+            {candidateInitial}
+          </div>
+          <span className="topbar-user-name">
+            {user?.name ? user.name.split(' ')[0] : 'Candidate'}
+          </span>
+        </Link>
       </div>
     </header>
   );

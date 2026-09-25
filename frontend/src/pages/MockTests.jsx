@@ -4,17 +4,13 @@ import { useAuth } from '../context/AuthContext';
 import {
   FileCheck2,
   Clock,
-  AlertCircle,
   CheckCircle,
   XCircle,
-  HelpCircle,
-  Sparkles,
   ArrowRight,
   ArrowLeft,
   RotateCcw,
-  CheckCircle2,
   Award,
-  BookOpen,
+  Sparkles,
   ChevronRight,
   X
 } from 'lucide-react';
@@ -31,7 +27,6 @@ const MockTests = () => {
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState({});
   const [timeLeft, setTimeLeft] = useState(0); // in seconds
-  const [currentSection, setCurrentSection] = useState('All');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Completed result report
@@ -87,7 +82,6 @@ const MockTests = () => {
         setTimeLeft(t.duration * 60); // minutes to seconds
         setUserAnswers({});
         setCurrentQIndex(0);
-        setCurrentSection('All');
         setTestReport(null);
       }
     } catch (err) {
@@ -116,7 +110,7 @@ const MockTests = () => {
 
   // Submit test
   const handleSubmitTest = async () => {
-    if (!window.confirm('Are you ready to submit your test? You will see immediate scoring and question explanations.')) return;
+    if (!window.confirm('Are you ready to submit your test? You will see instant scoring and question explanations.')) return;
     performSubmission();
   };
 
@@ -143,10 +137,10 @@ const MockTests = () => {
         if (res.data.result.status === 'Passed') {
           try {
             confetti({
-              particleCount: 80,
-              spread: 70,
+              particleCount: 70,
+              spread: 60,
               origin: { y: 0.6 },
-              colors: ['#10b981', '#34d399', '#f59e0b'],
+              colors: ['#16A34A', '#22C55E', '#065F46', '#DCFCE7'],
             });
           } catch {}
         }
@@ -166,35 +160,50 @@ const MockTests = () => {
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-  // Active question filtering
   const questions = activeTest?.questions || [];
   const currentQ = questions[currentQIndex];
 
   return (
-    <div>
-      {/* 1. ACTIVE TEST ARENA */}
+    <div className="page-transition">
+      {/* 1. ACTIVE EXAM INTERFACE */}
       {activeTest && currentQ ? (
-        <div className="test-arena">
-          {/* Header */}
-          <div className="test-arena-header">
+        <div style={{ background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '16px', padding: '1.75rem', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.06)' }}>
+          {/* Sticky Timer at Top */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '1.25rem', borderBottom: '1px solid #F3F4F6', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
-              <span className="test-pattern-badge">{activeTest.companyPattern}</span>
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#ffffff' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, background: '#DCFCE7', color: '#16A34A', padding: '0.2rem 0.65rem', borderRadius: '999px' }}>
+                {activeTest.companyPattern}
+              </span>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#1F2937', marginTop: '0.35rem' }}>
                 {activeTest.title}
               </h2>
             </div>
 
-            {/* Countdown Timer */}
-            <div className={`timer-box ${timeLeft < 180 ? 'timer-warning' : ''}`}>
-              <Clock size={22} />
+            {/* Countdown Timer with Warning Color */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.5rem 1rem',
+                borderRadius: '10px',
+                background: timeLeft < 180 ? '#FEF2F2' : '#F0FDF4',
+                border: '1px solid',
+                borderColor: timeLeft < 180 ? '#FCA5A5' : '#DCFCE7',
+                color: timeLeft < 180 ? '#DC2626' : '#16A34A',
+                fontWeight: 800,
+                fontSize: '1.15rem',
+              }}
+            >
+              <Clock size={20} className={timeLeft < 180 ? 'animated-pulse' : ''} />
               <span>{formatTimer(timeLeft)}</span>
             </div>
           </div>
 
           {/* Section & Question Navigation */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#34d399' }}>
-              Question {currentQIndex + 1} of {questions.length} &bull; Section: {currentQ.section}
+            <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#16A34A' }}>
+              Question {currentQIndex + 1} of {questions.length} &bull; Section: {currentQ.section || 'General'}
             </span>
 
             {/* Question Quick Palette */}
@@ -209,13 +218,14 @@ const MockTests = () => {
                     style={{
                       width: '32px',
                       height: '32px',
-                      borderRadius: '6px',
-                      border: isCurrent ? '2px solid #10b981' : '1px solid rgba(255,255,255,0.1)',
-                      background: isAnswered ? '#059669' : 'rgba(255,255,255,0.05)',
-                      color: 'white',
+                      borderRadius: '8px',
+                      border: isCurrent ? '2px solid #16A34A' : '1px solid #E5E7EB',
+                      background: isAnswered ? '#16A34A' : isCurrent ? '#DCFCE7' : '#F8F6F1',
+                      color: isAnswered ? '#FFFFFF' : isCurrent ? '#065F46' : '#4B5563',
                       fontWeight: 700,
-                      fontSize: '0.8rem',
+                      fontSize: '0.82rem',
                       cursor: 'pointer',
+                      transition: 'all 0.15s ease',
                     }}
                   >
                     {idx + 1}
@@ -225,16 +235,19 @@ const MockTests = () => {
             </div>
           </div>
 
-          {/* Question Box */}
-          <div className="question-box">
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '0.8rem', color: '#9cd4b5' }}>
-              <span>Marks: +{currentQ.marks || 2}</span>
-              <span style={{ color: '#fb7185' }}>Negative Marking: -{currentQ.negativeMarks || 0.5}</span>
+          {/* Question Panel */}
+          <div style={{ background: '#F8F6F1', border: '1px solid #E5E7EB', borderRadius: '14px', padding: '1.5rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '0.8rem', color: '#6B7280' }}>
+              <span>Marks: <strong style={{ color: '#16A34A' }}>+{currentQ.marks || 2}</strong></span>
+              <span>Negative: <strong style={{ color: '#DC2626' }}>-{currentQ.negativeMarks || 0.5}</strong></span>
             </div>
 
-            <p className="question-text">{currentQ.question}</p>
+            <p style={{ fontSize: '1.05rem', fontWeight: 600, color: '#1F2937', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+              {currentQ.question}
+            </p>
 
-            <div className="options-list">
+            {/* Options List */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {currentQ.options.map((opt, oIdx) => {
                 const isSelected = userAnswers[currentQ._id] === oIdx;
                 const letter = String.fromCharCode(65 + oIdx);
@@ -242,10 +255,37 @@ const MockTests = () => {
                   <div
                     key={oIdx}
                     onClick={() => handleSelectOption(currentQ._id, oIdx)}
-                    className={`option-item ${isSelected ? 'selected' : ''}`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.85rem',
+                      padding: '0.85rem 1.15rem',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      background: isSelected ? '#DCFCE7' : '#FFFFFF',
+                      border: '1.5px solid',
+                      borderColor: isSelected ? '#16A34A' : '#E5E7EB',
+                      boxShadow: isSelected ? '0 0 10px rgba(22, 163, 74, 0.15)' : 'none',
+                      transition: 'all 0.15s ease',
+                    }}
                   >
-                    <span className="option-letter">{letter}</span>
-                    <span style={{ fontSize: '0.95rem', color: isSelected ? '#f0fdf4' : '#cbd5e1' }}>
+                    <span
+                      style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 800,
+                        fontSize: '0.82rem',
+                        background: isSelected ? '#16A34A' : '#F3F4F6',
+                        color: isSelected ? '#FFFFFF' : '#4B5563',
+                      }}
+                    >
+                      {letter}
+                    </span>
+                    <span style={{ fontSize: '0.92rem', color: isSelected ? '#065F46' : '#1F2937', fontWeight: isSelected ? 600 : 400 }}>
                       {opt}
                     </span>
                   </div>
@@ -275,125 +315,136 @@ const MockTests = () => {
                 <button
                   onClick={() => handleClearOption(currentQ._id)}
                   className="btn-outline"
-                  style={{ color: '#fb7185' }}
+                  style={{ color: '#DC2626', borderColor: '#FECACA' }}
                 >
-                  <RotateCcw size={14} /> Clear Response
+                  <RotateCcw size={14} /> Clear Choice
                 </button>
               )}
             </div>
 
+            {/* Highlighted Green Submit Button */}
             <button
               onClick={handleSubmitTest}
               disabled={isSubmitting}
               className="btn-primary"
-              style={{ padding: '0.75rem 1.5rem', fontSize: '0.95rem' }}
+              style={{ padding: '0.75rem 1.6rem', fontSize: '0.95rem', fontWeight: 700 }}
+              id="submit-test-btn"
             >
-              {isSubmitting ? 'Evaluating Test...' : 'Finish & Submit Test'}
+              {isSubmitting ? 'Evaluating...' : 'Finish & Submit Test'}
             </button>
           </div>
         </div>
       ) : (
-        /* 2. CATALOG & PAST RESULTS */
+        /* 2. CATALOG & PAST TEST RESULTS */
         <div>
-          <div className="page-header">
+          <div className="page-header" style={{ marginBottom: '1.75rem' }}>
             <div>
-              <h1 className="page-title">
-                Mock Test <span className="green-gradient-text">Simulator</span>
+              <h1 className="page-title" style={{ fontSize: '1.75rem', fontWeight: 800, color: '#1F2937' }}>
+                Mock Test <span style={{ color: '#16A34A' }}>Simulator</span>
               </h1>
-              <p className="page-subtitle">
-                Company-specific timed assessments matching TCS NQT, Infosys Springboard & Wipro patterns.
+              <p className="page-subtitle" style={{ fontSize: '0.88rem', color: '#6B7280' }}>
+                Real-world timed assessments matching TCS NQT, Infosys SP, and Wipro placement cut-offs.
               </p>
             </div>
           </div>
 
           {/* Available Tests Cards Grid */}
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#f0fdf4', marginBottom: '1rem' }}>
-            Featured Company Mock Tests
+          <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#1F2937', marginBottom: '1rem' }}>
+            Available Recruitment Mock Assessments
           </h2>
 
-          <div className="test-cards-grid" style={{ marginBottom: '2.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
             {tests.map((test) => (
-              <div key={test._id} className="test-card">
-                <span className="test-pattern-badge">{test.companyPattern}</span>
-                <h3 className="test-title">{test.title}</h3>
-                <p style={{ fontSize: '0.85rem', color: '#9cd4b5', marginBottom: '1.25rem', lineHeight: 1.5 }}>
-                  Simulate official recruitment criteria. Sections include Aptitude, Logical Reasoning, and Technical Coding with negative marking.
+              <div key={test._id} className="metric-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, background: '#DCFCE7', color: '#16A34A', padding: '0.2rem 0.65rem', borderRadius: '999px', alignSelf: 'flex-start', marginBottom: '0.75rem' }}>
+                  {test.companyPattern}
+                </span>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#1F2937', marginBottom: '0.5rem' }}>
+                  {test.title}
+                </h3>
+                <p style={{ fontSize: '0.84rem', color: '#4B5563', marginBottom: '1.25rem', lineHeight: 1.5 }}>
+                  Sectional test covering Aptitude, Logical Reasoning, and Technical Coding with realistic negative marking.
                 </p>
 
-                <div className="test-meta-row">
-                  <div className="test-meta-item">
-                    <Clock size={16} /> {test.duration} Minutes
-                  </div>
-                  <div className="test-meta-item">
-                    <FileCheck2 size={16} /> {test.totalQuestions || test.questions?.length || 6} Questions
-                  </div>
-                  <div className="test-meta-item" style={{ color: '#34d399' }}>
-                    <Award size={16} /> {test.passMarks}% Pass Cutoff
-                  </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem 0', borderTop: '1px solid #F3F4F6', borderBottom: '1px solid #F3F4F6', marginBottom: '1.25rem', fontSize: '0.82rem', color: '#6B7280' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <Clock size={15} style={{ color: '#16A34A' }} /> {test.duration} Mins
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <FileCheck2 size={15} style={{ color: '#16A34A' }} /> {test.totalQuestions || test.questions?.length || 6} Questions
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#16A34A', fontWeight: 600 }}>
+                    <Award size={15} /> {test.passMarks}% Pass
+                  </span>
                 </div>
 
                 <button
                   onClick={() => handleStartTest(test._id)}
                   className="btn-primary"
-                  style={{ marginTop: 'auto' }}
+                  style={{ width: '100%', marginTop: 'auto' }}
                 >
-                  Attempt Mock Test <ArrowRight size={16} />
+                  <span>Attempt Assessment</span>
+                  <ArrowRight size={16} />
                 </button>
               </div>
             ))}
           </div>
 
           {/* Past Attempts Results Table */}
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#f0fdf4', marginBottom: '1rem' }}>
-            Your Test History & Performance Reports
+          <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#1F2937', marginBottom: '1rem' }}>
+            Your Assessment Performance History
           </h2>
 
-          <div className="data-table-container">
+          <div style={{ background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
             {pastResults.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '3rem', color: '#6ee7b7' }}>
-                You have not attempted any mock tests yet. Take your first test above to evaluate your cut-off score!
+              <div style={{ textAlign: 'center', padding: '3rem', color: '#6B7280' }}>
+                <FileCheck2 size={40} style={{ margin: '0 auto 0.75rem', color: '#16A34A', opacity: 0.6 }} />
+                <p style={{ fontWeight: 600, color: '#1F2937' }}>No assessment history recorded yet.</p>
+                <p style={{ fontSize: '0.82rem', color: '#6B7280', marginTop: '0.25rem' }}>
+                  Take a mock test above to benchmark your score against day-1 recruitment cut-offs!
+                </p>
               </div>
             ) : (
-              <table className="custom-table">
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr>
-                    <th>Mock Test</th>
-                    <th>Pattern</th>
-                    <th>Score</th>
-                    <th>Accuracy</th>
-                    <th>Status</th>
-                    <th>Date Attempted</th>
+                  <tr style={{ background: '#F8F6F1', borderBottom: '1px solid #E5E7EB' }}>
+                    <th style={{ padding: '0.9rem 1.25rem', textAlign: 'left', fontSize: '0.82rem', fontWeight: 700, color: '#4B5563' }}>Assessment</th>
+                    <th style={{ padding: '0.9rem 1rem', textAlign: 'left', fontSize: '0.82rem', fontWeight: 700, color: '#4B5563' }}>Pattern</th>
+                    <th style={{ padding: '0.9rem 1rem', textAlign: 'left', fontSize: '0.82rem', fontWeight: 700, color: '#4B5563' }}>Score</th>
+                    <th style={{ padding: '0.9rem 1rem', textAlign: 'left', fontSize: '0.82rem', fontWeight: 700, color: '#4B5563' }}>Accuracy</th>
+                    <th style={{ padding: '0.9rem 1rem', textAlign: 'left', fontSize: '0.82rem', fontWeight: 700, color: '#4B5563' }}>Status</th>
+                    <th style={{ padding: '0.9rem 1.25rem', textAlign: 'left', fontSize: '0.82rem', fontWeight: 700, color: '#4B5563' }}>Date</th>
                   </tr>
                 </thead>
                 <tbody>
                   {pastResults.map((r) => (
-                    <tr key={r._id}>
-                      <td style={{ fontWeight: 600, color: '#f0fdf4' }}>{r.testId?.title || 'Mock Assessment'}</td>
-                      <td>
-                        <span className="badge" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399' }}>
+                    <tr key={r._id} style={{ borderBottom: '1px solid #F3F4F6' }}>
+                      <td style={{ padding: '1rem 1.25rem', fontWeight: 600, color: '#1F2937' }}>{r.testId?.title || 'Mock Assessment'}</td>
+                      <td style={{ padding: '1rem 1rem' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, background: '#DCFCE7', color: '#16A34A', padding: '0.2rem 0.55rem', borderRadius: '999px' }}>
                           {r.testId?.companyPattern || 'TCS NQT'}
                         </span>
                       </td>
-                      <td style={{ fontWeight: 700, color: '#f0fdf4' }}>
+                      <td style={{ padding: '1rem 1rem', fontWeight: 700, color: '#1F2937' }}>
                         {r.score} / {r.totalMarks}
                       </td>
-                      <td>
-                        <span style={{ fontWeight: 600, color: r.accuracy >= 60 ? '#34d399' : '#fb7185' }}>
+                      <td style={{ padding: '1rem 1rem' }}>
+                        <span style={{ fontWeight: 700, color: r.accuracy >= 60 ? '#16A34A' : '#DC2626' }}>
                           {r.accuracy}%
                         </span>
                       </td>
-                      <td>
+                      <td style={{ padding: '1rem 1rem' }}>
                         {r.status === 'Passed' ? (
-                          <span className="badge badge-correct">
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem', fontWeight: 700, color: '#16A34A', background: '#DCFCE7', padding: '0.2rem 0.6rem', borderRadius: '999px' }}>
                             <CheckCircle size={13} /> Passed
                           </span>
                         ) : (
-                          <span className="badge badge-incorrect">
-                            <XCircle size={13} /> Needs Review
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem', fontWeight: 700, color: '#DC2626', background: '#FEE2E2', padding: '0.2rem 0.6rem', borderRadius: '999px' }}>
+                            <XCircle size={13} /> Review Needed
                           </span>
                         )}
                       </td>
-                      <td style={{ fontSize: '0.8rem', color: '#6ee7b7' }}>
+                      <td style={{ padding: '1rem 1.25rem', fontSize: '0.82rem', color: '#6B7280' }}>
                         {new Date(r.createdAt).toLocaleDateString()}
                       </td>
                     </tr>
@@ -408,91 +459,51 @@ const MockTests = () => {
       {/* 3. TEST RESULT REPORT MODAL */}
       {testReport && (
         <div className="modal-backdrop">
-          <div className="modal-content" style={{ maxWidth: '750px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+          <div className="modal-content" style={{ background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '16px', maxWidth: '680px', width: '92%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid #F3F4F6', paddingBottom: '0.75rem' }}>
               <div>
-                <span className="badge badge-easy">{testReport.companyPattern}</span>
-                <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#ffffff', marginTop: '0.35rem' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, background: '#DCFCE7', color: '#16A34A', padding: '0.2rem 0.6rem', borderRadius: '999px' }}>
+                  {testReport.companyPattern}
+                </span>
+                <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#1F2937', marginTop: '0.35rem' }}>
                   Assessment Report: {testReport.testTitle}
                 </h2>
               </div>
               <button
                 onClick={() => setTestReport(null)}
-                style={{ background: 'none', border: 'none', color: '#9cd4b5', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer' }}
               >
-                <X size={22} />
+                <X size={20} />
               </button>
             </div>
 
-            {/* Score Banner */}
-            <div
-              style={{
-                background: testReport.status === 'Passed' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)',
-                border: testReport.status === 'Passed' ? '1px solid #10b981' : '1px solid #f43f5e',
-                borderRadius: '12px',
-                padding: '1.25rem',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '1.5rem',
-              }}
-            >
-              <div>
-                <span style={{ fontSize: '0.85rem', color: '#9cd4b5', textTransform: 'uppercase', fontWeight: 700 }}>
-                  Test Verdict
-                </span>
-                <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: testReport.status === 'Passed' ? '#34d399' : '#fb7185' }}>
-                  {testReport.status === 'Passed' ? 'PASSED CUT-OFF 🎉' : 'REQUIRES REVISION'}
-                </h3>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '2rem', fontWeight: 800, color: '#ffffff' }}>
-                  {testReport.score} <span style={{ fontSize: '1rem', color: '#9cd4b5' }}>/ {testReport.totalMarks}</span>
-                </span>
-                <p style={{ fontSize: '0.8rem', color: '#a7f3d0' }}>
-                  {testReport.percentage}% Score &bull; {testReport.accuracy}% Accuracy
-                </p>
-              </div>
-            </div>
-
-            {/* Questions Detailed Breakdown */}
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff', marginBottom: '0.9rem' }}>
-              Question Explanations & Key Insights
-            </h3>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '350px', overflowY: 'auto' }}>
-              {testReport.evaluatedQuestions?.map((q, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    background: '#09130e',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    borderRadius: '8px',
-                    padding: '1rem',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.8rem' }}>
-                    <span style={{ fontWeight: 700, color: '#34d399' }}>
-                      Q{idx + 1} &bull; {q.section}
-                    </span>
-                    <span style={{ fontWeight: 600, color: q.isCorrect ? '#34d399' : '#fb7185' }}>
-                      {q.isCorrect ? '✅ Correct' : q.status === 'unattempted' ? '⚪ Skipped' : '❌ Incorrect (-0.5)'}
-                    </span>
-                  </div>
-                  <p style={{ fontSize: '0.9rem', color: '#f0fdf4', marginBottom: '0.6rem' }}>{q.question}</p>
-                  <p style={{ fontSize: '0.8rem', color: '#a7f3d0' }}>
-                    <strong>Correct Option:</strong> {q.options[q.correctAnswer]}
-                  </p>
-                  <p style={{ fontSize: '0.78rem', color: '#6ee7b7', fontStyle: 'italic', marginTop: '0.35rem' }}>
-                    💡 Explanation: {q.explanation}
-                  </p>
+            {/* Score Summary Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div style={{ background: '#F8F6F1', padding: '1rem', borderRadius: '10px', textAlign: 'center' }}>
+                <span style={{ fontSize: '0.78rem', color: '#6B7280' }}>Score Obtained</span>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1F2937', marginTop: '0.2rem' }}>
+                  {testReport.score} <span style={{ fontSize: '0.9rem', color: '#6B7280' }}>/ {testReport.totalMarks}</span>
                 </div>
-              ))}
+              </div>
+
+              <div style={{ background: '#F8F6F1', padding: '1rem', borderRadius: '10px', textAlign: 'center' }}>
+                <span style={{ fontSize: '0.78rem', color: '#6B7280' }}>Overall Accuracy</span>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: testReport.accuracy >= 60 ? '#16A34A' : '#DC2626', marginTop: '0.2rem' }}>
+                  {testReport.accuracy}%
+                </div>
+              </div>
+
+              <div style={{ background: testReport.status === 'Passed' ? '#DCFCE7' : '#FEE2E2', padding: '1rem', borderRadius: '10px', textAlign: 'center' }}>
+                <span style={{ fontSize: '0.78rem', color: testReport.status === 'Passed' ? '#065F46' : '#991B1B' }}>Final Verdict</span>
+                <div style={{ fontSize: '1.3rem', fontWeight: 800, color: testReport.status === 'Passed' ? '#16A34A' : '#DC2626', marginTop: '0.2rem' }}>
+                  {testReport.status === 'Passed' ? 'Passed 🎉' : 'Needs Work'}
+                </div>
+              </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.25rem' }}>
               <button onClick={() => setTestReport(null)} className="btn-primary">
-                Done & Return to Catalog
+                Return to Dashboard
               </button>
             </div>
           </div>

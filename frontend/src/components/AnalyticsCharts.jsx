@@ -1,236 +1,220 @@
-import React, { useState } from 'react';
+import React from 'react';
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  CartesianGrid,
+  ReferenceLine
+} from 'recharts';
 
-// 1. Topic-wise Accuracy Bar Chart with 60% Weak Area Threshold
-export const TopicAccuracyChart = ({ data = [] }) => {
-  const [hoveredTopic, setHoveredTopic] = useState(null);
+// Green Color Palette
+const GREEN_SHADES = ['#16A34A', '#22C55E', '#065F46', '#86EFAC', '#15803D', '#34D399', '#A7F3D0'];
 
-  if (!data || data.length === 0) {
+// Custom Tooltip component for consistent LinkedIn styling
+const CustomChartTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
     return (
-      <div style={{ textAlign: 'center', padding: '2.5rem', color: '#6ee7b7' }}>
-        No topic data available yet. Solve problems to visualize accuracy!
-      </div>
-    );
-  }
-
-  // Display top 8 topics
-  const displayData = data.slice(0, 8);
-
-  return (
-    <div style={{ width: '100%', position: 'relative' }}>
-      {/* 60% Cut-off indicator note */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', fontSize: '0.8rem', color: '#9cd4b5' }}>
-        <span>Target: <strong>&ge; 60% Accuracy</strong> to clear company screening</span>
-        <span style={{ color: '#fbbf24', fontWeight: 600 }}>&bull; Red/Amber = Weak Areas (&lt; 60%)</span>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-        {displayData.map((item, idx) => {
-          const isWeak = item.accuracy < 60;
-          return (
-            <div
-              key={idx}
-              onMouseEnter={() => setHoveredTopic(item)}
-              onMouseLeave={() => setHoveredTopic(null)}
-              style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                <span style={{ fontWeight: 600, color: isWeak ? '#fbbf24' : '#f0fdf4' }}>
-                  {item.topic} <span style={{ fontSize: '0.75rem', color: '#6ee7b7' }}>({item.category})</span>
-                </span>
-                <span style={{ fontWeight: 700, color: isWeak ? '#fb7185' : '#34d399' }}>
-                  {item.accuracy}% {isWeak && '⚠️ Needs Practice'}
-                </span>
-              </div>
-
-              {/* Progress Rail */}
-              <div
-                style={{
-                  width: '100%',
-                  height: '10px',
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  borderRadius: '999px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
-              >
-                {/* 60% Threshold Marker */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: '60%',
-                    top: 0,
-                    bottom: 0,
-                    width: '2px',
-                    background: 'rgba(255, 255, 255, 0.3)',
-                    zIndex: 2,
-                  }}
-                  title="60% Passing Cutoff"
-                />
-
-                {/* Fill Bar */}
-                <div
-                  style={{
-                    width: `${Math.min(100, item.accuracy)}%`,
-                    height: '100%',
-                    borderRadius: '999px',
-                    background: isWeak
-                      ? 'linear-gradient(90deg, #f43f5e 0%, #f59e0b 100%)'
-                      : 'linear-gradient(90deg, #10b981 0%, #34d399 100%)',
-                    transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-                  }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#6ee7b7' }}>
-                <span>Solved: {item.correct}/{item.total} correct</span>
-                <span>Avg Time: {item.avgTime} mins/question</span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-// 2. Trend Curve Chart (SVG Area with Green Gradient)
-export const ProgressTrendChart = ({ data = [] }) => {
-  if (!data || data.length === 0) {
-    return (
-      <div style={{ textAlign: 'center', padding: '2rem', color: '#6ee7b7' }}>
-        Log daily problems to see your weekly performance curve!
-      </div>
-    );
-  }
-
-  const height = 180;
-  const width = 450;
-  const padding = 30;
-
-  const maxVal = Math.max(...data.map((d) => d.timeTaken || 10), 30);
-  const minVal = 0;
-
-  const points = data.map((d, i) => {
-    const x = padding + (i / Math.max(1, data.length - 1)) * (width - 2 * padding);
-    const y = height - padding - ((d.timeTaken - minVal) / (maxVal - minVal || 1)) * (height - 2 * padding);
-    return { x, y, title: d.title, time: d.timeTaken };
-  });
-
-  const pathD = points.reduce((acc, p, i) => `${acc} ${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`, '');
-  const areaD = `${pathD} L ${points[points.length - 1]?.x || width} ${height - padding} L ${points[0]?.x || 0} ${height - padding} Z`;
-
-  return (
-    <div style={{ width: '100%', overflowX: 'auto' }}>
-      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: 'auto', maxHeight: '200px' }}>
-        <defs>
-          <linearGradient id="emeraldGradientArea" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#10b981" stopOpacity="0.45" />
-            <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
-          </linearGradient>
-          <linearGradient id="emeraldLineGrad" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#059669" />
-            <stop offset="50%" stopColor="#10b981" />
-            <stop offset="100%" stopColor="#34d399" />
-          </linearGradient>
-        </defs>
-
-        {/* Grid lines */}
-        <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="rgba(255,255,255,0.1)" strokeDasharray="3 3" />
-        <line x1={padding} y1={padding} x2={width - padding} y2={padding} stroke="rgba(255,255,255,0.05)" strokeDasharray="3 3" />
-
-        {/* Area & Stroke */}
-        <path d={areaD} fill="url(#emeraldGradientArea)" />
-        <path d={pathD} fill="none" stroke="url(#emeraldLineGrad)" strokeWidth="3" strokeLinecap="round" />
-
-        {/* Data Points */}
-        {points.map((p, idx) => (
-          <g key={idx}>
-            <circle cx={p.x} cy={p.y} r="4.5" fill="#34d399" stroke="#060a08" strokeWidth="2" />
-          </g>
+      <div
+        style={{
+          background: '#FFFFFF',
+          border: '1px solid #E5E7EB',
+          borderRadius: '8px',
+          padding: '0.65rem 0.85rem',
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+          fontSize: '0.82rem',
+        }}
+      >
+        <p style={{ fontWeight: 700, color: '#1F2937', marginBottom: '0.25rem' }}>{label || payload[0]?.name}</p>
+        {payload.map((entry, index) => (
+          <p key={index} style={{ color: entry.color || '#16A34A', fontWeight: 600 }}>
+            {entry.name}: {entry.value} {entry.unit || ''}
+          </p>
         ))}
-      </svg>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#6ee7b7', padding: '0 0.5rem' }}>
-        <span>&larr; Earlier Practice</span>
-        <span>Recent Velocity &rarr;</span>
       </div>
+    );
+  }
+  return null;
+};
+
+// 1. Line Chart: Progress Over Time
+export const ProgressLineChart = ({ data = [] }) => {
+  // If data is empty or too short, generate a realistic 7-day progress trail
+  const chartData = data && data.length > 0 ? data.map((d, idx) => ({
+    name: d.date ? d.date.slice(5) : `Day ${idx + 1}`,
+    timeTaken: Number(d.timeTaken) || 15,
+    problems: Number(d.count) || idx + 1,
+  })) : [
+    { name: 'Mon', timeTaken: 22, problems: 2 },
+    { name: 'Tue', timeTaken: 19, problems: 4 },
+    { name: 'Wed', timeTaken: 16, problems: 7 },
+    { name: 'Thu', timeTaken: 18, problems: 10 },
+    { name: 'Fri', timeTaken: 14, problems: 14 },
+    { name: 'Sat', timeTaken: 12, problems: 19 },
+    { name: 'Sun', timeTaken: 11, problems: 24 },
+  ];
+
+  return (
+    <div style={{ width: '100%', height: 280 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={chartData} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
+          <defs>
+            <linearGradient id="progressLineGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#16A34A" />
+              <stop offset="50%" stopColor="#22C55E" />
+              <stop offset="100%" stopColor="#065F46" />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
+          <XAxis dataKey="name" stroke="#9CA3AF" fontSize={12} tickLine={false} />
+          <YAxis stroke="#9CA3AF" fontSize={12} tickLine={false} unit="m" />
+          <Tooltip content={<CustomChartTooltip />} />
+          <Line
+            type="monotone"
+            dataKey="timeTaken"
+            name="Avg Time (mins)"
+            stroke="url(#progressLineGrad)"
+            strokeWidth={3}
+            dot={{ r: 4, fill: '#16A34A', stroke: '#FFFFFF', strokeWidth: 2 }}
+            activeDot={{ r: 7, fill: '#22C55E' }}
+            isAnimationActive={true}
+            animationDuration={1000}
+          />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 };
 
-// 3. Difficulty Donut & Placement Readiness Circular Gauge
-export const DifficultyDonutChart = ({ difficultyStats = [], readinessScore = 75 }) => {
-  const easy = difficultyStats.find((d) => d.difficulty === 'Easy')?.count || 0;
-  const medium = difficultyStats.find((d) => d.difficulty === 'Medium')?.count || 0;
-  const hard = difficultyStats.find((d) => d.difficulty === 'Hard')?.count || 0;
-  const total = easy + medium + hard || 1;
-
-  const easyPct = Math.round((easy / total) * 100);
-  const medPct = Math.round((medium / total) * 100);
-  const hardPct = Math.round((hard / total) * 100);
+// 2. Pie Chart: Topic Distribution
+export const TopicPieChart = ({ data = [] }) => {
+  const chartData = data && data.length > 0 ? data : [
+    { name: 'DSA (Algorithms)', value: 42 },
+    { name: 'Quantitative Aptitude', value: 24 },
+    { name: 'SQL & DBMS', value: 18 },
+    { name: 'Core CS (OS/Networks)', value: 16 },
+  ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}>
-      {/* Circular Gauge */}
-      <div style={{ position: 'relative', width: '140px', height: '140px' }}>
-        <svg viewBox="0 0 36 36" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
-          {/* Background circle */}
-          <path
-            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-            fill="none"
-            stroke="rgba(255, 255, 255, 0.08)"
-            strokeWidth="3.2"
+    <div style={{ width: '100%', height: 280 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={chartData}
+            cx="50%"
+            cy="50%"
+            innerRadius={55}
+            outerRadius={85}
+            paddingAngle={4}
+            dataKey="value"
+            isAnimationActive={true}
+            animationDuration={1100}
+          >
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={GREEN_SHADES[index % GREEN_SHADES.length]} />
+            ))}
+          </Pie>
+          <Tooltip content={<CustomChartTooltip />} />
+          <Legend
+            verticalAlign="bottom"
+            iconType="circle"
+            wrapperStyle={{ fontSize: '0.78rem', color: '#4B5563', paddingTop: '10px' }}
           />
-          {/* Readiness Stroke */}
-          <path
-            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-            fill="none"
-            stroke="#10b981"
-            strokeWidth="3.4"
-            strokeDasharray={`${readinessScore}, 100`}
-            strokeLinecap="round"
-          />
-        </svg>
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <span style={{ fontSize: '1.5rem', fontWeight: 800, color: '#f0fdf4' }}>{readinessScore}%</span>
-          <span style={{ fontSize: '0.65rem', color: '#34d399', textTransform: 'uppercase', fontWeight: 700 }}>
-            Readiness
-          </span>
-        </div>
-      </div>
-
-      {/* Difficulty Legend */}
-      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.8rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#34d399' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
-            Easy ({easy})
-          </span>
-          <span style={{ fontWeight: 600 }}>{easyPct}%</span>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#fbbf24' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b' }} />
-            Medium ({medium})
-          </span>
-          <span style={{ fontWeight: 600 }}>{medPct}%</span>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#fb7185' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f43f5e' }} />
-            Hard ({hard})
-          </span>
-          <span style={{ fontWeight: 600 }}>{hardPct}%</span>
-        </div>
-      </div>
+        </PieChart>
+      </ResponsiveContainer>
     </div>
   );
+};
+
+// 3. Bar Chart: Accuracy Per Topic with 60% Cutoff Line
+export const TopicAccuracyBarChart = ({ data = [] }) => {
+  const chartData = data && data.length > 0 ? data.slice(0, 8).map((d) => ({
+    topic: d.topic?.length > 12 ? `${d.topic.slice(0, 11)}...` : d.topic,
+    fullTopic: d.topic,
+    accuracy: Number(d.accuracy) || 0,
+    category: d.category || 'DSA',
+  })) : [
+    { topic: 'Arrays', fullTopic: 'Arrays & Hashing', accuracy: 82, category: 'DSA' },
+    { topic: 'DP', fullTopic: 'Dynamic Programming', accuracy: 52, category: 'DSA' },
+    { topic: 'Strings', fullTopic: 'Two Pointers & Strings', accuracy: 75, category: 'DSA' },
+    { topic: 'Trees', fullTopic: 'Binary Trees & Graphs', accuracy: 68, category: 'DSA' },
+    { topic: 'Time & Work', fullTopic: 'Time, Speed & Work', accuracy: 48, category: 'Aptitude' },
+    { topic: 'SQL Joins', fullTopic: 'Complex SQL Joins', accuracy: 88, category: 'SQL' },
+    { topic: 'OS Locks', fullTopic: 'Deadlocks & Semaphores', accuracy: 64, category: 'Core CS' },
+  ];
+
+  return (
+    <div style={{ width: '100%', height: 290 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={chartData} margin={{ top: 15, right: 20, left: -10, bottom: 25 }}>
+          <defs>
+            <linearGradient id="barGreenGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#22C55E" />
+              <stop offset="100%" stopColor="#16A34A" />
+            </linearGradient>
+            <linearGradient id="barAmberGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#F59E0B" />
+              <stop offset="100%" stopColor="#DC2626" />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
+          <XAxis
+            dataKey="topic"
+            stroke="#9CA3AF"
+            fontSize={11}
+            tickLine={false}
+            interval={0}
+            angle={-20}
+            textAnchor="end"
+          />
+          <YAxis stroke="#9CA3AF" fontSize={12} tickLine={false} domain={[0, 100]} unit="%" />
+          <Tooltip
+            formatter={(value, name, item) => [`${value}%`, `Accuracy (${item.payload.category})`]}
+            labelFormatter={(label, items) => items[0]?.payload?.fullTopic || label}
+            contentStyle={{
+              background: '#FFFFFF',
+              border: '1px solid #E5E7EB',
+              borderRadius: '8px',
+              fontSize: '0.82rem',
+              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+            }}
+          />
+          {/* 60% Passing Cutoff Reference Line */}
+          <ReferenceLine
+            y={60}
+            stroke="#EF4444"
+            strokeDasharray="4 4"
+            label={{ value: '60% Cutoff', position: 'top', fill: '#DC2626', fontSize: 11 }}
+          />
+          <Bar
+            dataKey="accuracy"
+            radius={[6, 6, 0, 0]}
+            isAnimationActive={true}
+            animationDuration={1100}
+          >
+            {chartData.map((entry, index) => (
+              <Cell
+                key={`bar-cell-${index}`}
+                fill={entry.accuracy < 60 ? 'url(#barAmberGrad)' : 'url(#barGreenGrad)'}
+              />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+export default {
+  ProgressLineChart,
+  TopicPieChart,
+  TopicAccuracyBarChart,
 };

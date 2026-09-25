@@ -7,12 +7,8 @@ import {
   FileCheck2,
   BarChart3,
   Trophy,
-  Flame,
-  LogOut,
-  Sparkles,
-  Layers,
-  GraduationCap,
-  User
+  User,
+  LogOut
 } from 'lucide-react';
 
 const Sidebar = ({ mobileOpen, setMobileOpen }) => {
@@ -26,22 +22,22 @@ const Sidebar = ({ mobileOpen, setMobileOpen }) => {
 
   const navItems = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/practice', label: 'Practice Tracker', icon: Code2, badge: 'Active' },
-    { to: '/tests', label: 'Mock Test Simulator', icon: FileCheck2, badge: 'TCS / Infy' },
-    { to: '/analytics', label: 'Analytics & Weak Areas', icon: BarChart3 },
-    { to: '/leaderboard', label: 'Live Leaderboard', icon: Trophy, badge: 'Live' },
-    { to: '/profile', label: 'Candidate Profile', icon: User },
+    { to: '/practice', label: 'Practice Tracker', icon: Code2 },
+    { to: '/tests', label: 'Mock Tests', icon: FileCheck2 },
+    { to: '/analytics', label: 'Analytics', icon: BarChart3 },
+    { to: '/leaderboard', label: 'Leaderboard', icon: Trophy },
+    { to: '/profile', label: 'Profile', icon: User },
   ];
 
   return (
     <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
       {/* Brand Header with Uploaded Logo */}
-      <NavLink to="/launch" className="sidebar-brand" style={{ textDecoration: 'none' }} title="Campus 2 Career Launch Page">
+      <NavLink to="/dashboard" className="sidebar-brand" style={{ textDecoration: 'none' }} title="Campus2Career">
         <div className="sidebar-logo-container">
-          <img src="/logo.png" alt="Campus 2 Career" className="sidebar-logo-img" />
+          <img src="/logo.png" alt="Campus2Career" className="sidebar-logo-img" />
         </div>
         <div>
-          <span className="brand-title">Campus <span style={{ color: '#10b981' }}>2</span> Career</span>
+          <span className="brand-title">Campus<span style={{ color: '#16a34a' }}>2</span>Career</span>
           <span className="brand-subtitle">Track &bull; Analyze &bull; Achieve</span>
         </div>
       </NavLink>
@@ -59,7 +55,6 @@ const Sidebar = ({ mobileOpen, setMobileOpen }) => {
             >
               <Icon size={18} />
               <span>{item.label}</span>
-              {item.badge && <span className="nav-badge">{item.badge}</span>}
             </NavLink>
           );
         })}
@@ -73,12 +68,12 @@ const Sidebar = ({ mobileOpen, setMobileOpen }) => {
           style={{ cursor: 'pointer' }}
           title="View & Edit Profile"
         >
-          <div className="sidebar-user-avatar">
+          <div className="sidebar-user-avatar" style={{ background: 'linear-gradient(135deg, #16a34a 0%, #065f46 100%)' }}>
             {user?.name ? user.name.charAt(0).toUpperCase() : 'C'}
           </div>
           <div className="sidebar-user-info">
             <span className="sidebar-user-name">{user?.name || 'Candidate'}</span>
-            <span className="sidebar-user-role">
+            <span className="sidebar-user-role" style={{ color: '#16a34a' }}>
               {user?.targetCompany ? user.targetCompany.split(' ')[0] : 'Top Tech'} Track
             </span>
           </div>

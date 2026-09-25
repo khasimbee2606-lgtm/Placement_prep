@@ -2,16 +2,17 @@ import React, { useState, useEffect } from 'react';
 import API from '../services/api';
 import socketService from '../services/socket';
 import { useAuth } from '../context/AuthContext';
+import { TableRowSkeleton } from '../components/SkeletonLoader';
 import {
   Trophy,
   Flame,
   Award,
   Sparkles,
-  GraduationCap,
-  Briefcase,
   Radio,
-  CheckCircle,
-  RefreshCw
+  RefreshCw,
+  Crown,
+  Medal,
+  User
 } from 'lucide-react';
 
 const Leaderboard = () => {
@@ -24,6 +25,7 @@ const Leaderboard = () => {
 
   const fetchLeaderboard = async () => {
     try {
+      setLoading(true);
       const res = await API.get('/leaderboard');
       if (res.data.success) {
         setLeaderboard(res.data.leaderboard || []);
@@ -41,7 +43,7 @@ const Leaderboard = () => {
     fetchLeaderboard();
 
     // Listen to real-time socket.io leaderboard updates
-    const handleLeaderboardUpdate = (data) => {
+    const handleLeaderboardUpdate = () => {
       setRealtimeNotice(true);
       fetchLeaderboard();
       setTimeout(() => setRealtimeNotice(false), 3000);
@@ -57,13 +59,13 @@ const Leaderboard = () => {
   const topThree = leaderboard.slice(0, 3);
 
   return (
-    <div>
-      <div className="page-header">
+    <div className="page-transition">
+      <div className="page-header" style={{ marginBottom: '1.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 className="page-title">
-            Campus <span className="green-gradient-text">Leaderboard</span>
+          <h1 className="page-title" style={{ fontSize: '1.75rem', fontWeight: 800, color: '#1F2937' }}>
+            Campus <span style={{ color: '#16A34A' }}>Leaderboard</span>
           </h1>
-          <p className="page-subtitle">
+          <p className="page-subtitle" style={{ fontSize: '0.88rem', color: '#6B7280' }}>
             Real-time rankings based on verified problem solving, daily streaks, and mock assessment XP.
           </p>
         </div>
@@ -79,15 +81,15 @@ const Leaderboard = () => {
               fontWeight: 600,
               padding: '0.35rem 0.8rem',
               borderRadius: '999px',
-              background: 'rgba(16, 185, 129, 0.15)',
-              color: '#34d399',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
+              background: '#DCFCE7',
+              color: '#065F46',
+              border: '1px solid #A7F3D0',
             }}
           >
-            <Radio size={14} className="animated-pulse" />
+            <Radio size={14} className="animated-pulse" style={{ color: '#16A34A' }} />
             Socket.io Live Sync
           </span>
-          <button onClick={fetchLeaderboard} className="btn-outline" title="Refresh Rankings">
+          <button onClick={fetchLeaderboard} className="btn-outline" title="Refresh Rankings" style={{ padding: '0.45rem 0.8rem' }}>
             <RefreshCw size={14} />
           </button>
         </div>
@@ -97,155 +99,278 @@ const Leaderboard = () => {
       {realtimeNotice && (
         <div
           style={{
-            background: 'rgba(16, 185, 129, 0.2)',
-            border: '1px solid #10b981',
+            background: '#DCFCE7',
+            border: '1px solid #16A34A',
             borderRadius: '10px',
             padding: '0.75rem 1rem',
             marginBottom: '1.5rem',
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
-            fontSize: '0.85rem',
-            color: '#34d399',
+            fontSize: '0.88rem',
+            color: '#065F46',
             fontWeight: 600,
           }}
         >
-          <Sparkles size={16} /> Live Update: Candidate completed a challenge! Rankings updated in real-time.
+          <Sparkles size={16} style={{ color: '#16A34A' }} /> Live Update: Candidate completed a challenge! Rankings updated.
         </div>
       )}
 
-      {/* Top 3 Podium Cards */}
+      {/* Top 3 Podium Cards (Gold & Green Emphasis) */}
       {topThree.length >= 3 && (
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
             gap: '1.25rem',
-            marginBottom: '2rem',
+            marginBottom: '2.5rem',
+            alignItems: 'end',
           }}
         >
-          {/* Rank 2 - Silver */}
+          {/* Rank 2 - Silver / Green Emphasis */}
           <div
             className="metric-card"
             style={{
-              borderTop: '3px solid #94a3b8',
-              transform: 'scale(0.96)',
+              background: '#FFFFFF',
+              border: '2px solid #A7F3D0',
+              borderTop: '4px solid #16A34A',
+              borderRadius: '16px',
               textAlign: 'center',
-              alignItems: 'center',
+              padding: '1.5rem 1.25rem',
+              boxShadow: '0 4px 16px -2px rgba(22, 163, 74, 0.1)',
             }}
           >
-            <div className="rank-badge rank-2" style={{ width: '42px', height: '42px', fontSize: '1.1rem', marginBottom: '0.5rem' }}>
+            <div
+              style={{
+                width: '46px',
+                height: '46px',
+                borderRadius: '50%',
+                background: '#DCFCE7',
+                color: '#16A34A',
+                fontWeight: 800,
+                fontSize: '1.2rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 0.75rem',
+                border: '2px solid #86EFAC',
+              }}
+            >
               2
             </div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff' }}>{topThree[1].name}</h3>
-            <p style={{ fontSize: '0.75rem', color: '#9cd4b5', marginBottom: '0.75rem' }}>{topThree[1].college}</p>
-            <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#34d399' }}>
-              {topThree[1].points} <span style={{ fontSize: '0.8rem', color: '#9cd4b5' }}>XP</span>
-            </span>
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', fontSize: '0.75rem', color: '#fbbf24' }}>
+            <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: '#F3F4F6', color: '#1F2937', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.5rem', border: '2px solid #E5E7EB' }}>
+              {topThree[1].name.charAt(0)}
+            </div>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#1F2937' }}>{topThree[1].name}</h3>
+            <p style={{ fontSize: '0.78rem', color: '#6B7280', marginBottom: '0.75rem' }}>{topThree[1].college}</p>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#16A34A' }}>
+              {topThree[1].points} <span style={{ fontSize: '0.85rem', color: '#065F46' }}>XP</span>
+            </div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.5rem', fontSize: '0.78rem', color: '#B45309', fontWeight: 600 }}>
               <Flame size={14} /> {topThree[1].streak} Days Streak
             </div>
           </div>
 
-          {/* Rank 1 - Gold (Elevated) */}
+          {/* Rank 1 - Gold / Green Crown Podium (Elevated) */}
           <div
             className="metric-card"
             style={{
-              borderTop: '3px solid #f59e0b',
-              background: 'linear-gradient(145deg, rgba(20, 38, 28, 0.95) 0%, rgba(12, 22, 16, 0.95) 100%)',
-              boxShadow: '0 8px 30px rgba(16, 185, 129, 0.25)',
+              background: 'linear-gradient(135deg, #FEF3C7 0%, #FFFFFF 100%)',
+              border: '2.5px solid #F59E0B',
+              borderTop: '5px solid #D97706',
+              borderRadius: '16px',
               textAlign: 'center',
-              alignItems: 'center',
+              padding: '2rem 1.25rem',
+              boxShadow: '0 10px 25px -4px rgba(245, 158, 11, 0.25), 0 4px 12px rgba(22, 163, 74, 0.1)',
+              position: 'relative',
             }}
           >
-            <div className="rank-badge rank-1" style={{ width: '48px', height: '48px', fontSize: '1.3rem', marginBottom: '0.5rem' }}>
+            <div
+              style={{
+                width: '54px',
+                height: '54px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+                color: 'white',
+                fontWeight: 900,
+                fontSize: '1.4rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 0.75rem',
+                boxShadow: '0 0 16px rgba(245, 158, 11, 0.5)',
+              }}
+            >
               👑 1
             </div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff' }}>{topThree[0].name}</h3>
-            <p style={{ fontSize: '0.75rem', color: '#34d399', fontWeight: 600, marginBottom: '0.75rem' }}>{topThree[0].college}</p>
-            <span style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fbbf24' }}>
-              {topThree[0].points} <span style={{ fontSize: '0.9rem', color: '#fcd34d' }}>XP</span>
-            </span>
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', fontSize: '0.8rem', color: '#fbbf24', fontWeight: 700 }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#FEF3C7', color: '#B45309', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.5rem', border: '2px solid #F59E0B', fontSize: '1.1rem' }}>
+              {topThree[0].name.charAt(0)}
+            </div>
+            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#1F2937' }}>{topThree[0].name}</h3>
+            <p style={{ fontSize: '0.8rem', color: '#16A34A', fontWeight: 600, marginBottom: '0.75rem' }}>{topThree[0].college}</p>
+            <div style={{ fontSize: '1.9rem', fontWeight: 900, color: '#B45309' }}>
+              {topThree[0].points} <span style={{ fontSize: '1rem', color: '#D97706' }}>XP</span>
+            </div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.5rem', fontSize: '0.84rem', color: '#B45309', fontWeight: 700 }}>
               <Flame size={16} /> {topThree[0].streak} Days Daily Streak 🔥
             </div>
           </div>
 
-          {/* Rank 3 - Bronze */}
+          {/* Rank 3 - Bronze / Accent Green */}
           <div
             className="metric-card"
             style={{
-              borderTop: '3px solid #b45309',
-              transform: 'scale(0.94)',
+              background: '#FFFFFF',
+              border: '2px solid #E5E7EB',
+              borderTop: '4px solid #22C55E',
+              borderRadius: '16px',
               textAlign: 'center',
-              alignItems: 'center',
+              padding: '1.5rem 1.25rem',
+              boxShadow: '0 4px 16px -2px rgba(0, 0, 0, 0.05)',
             }}
           >
-            <div className="rank-badge rank-3" style={{ width: '40px', height: '40px', fontSize: '1.1rem', marginBottom: '0.5rem' }}>
+            <div
+              style={{
+                width: '46px',
+                height: '46px',
+                borderRadius: '50%',
+                background: '#F8F6F1',
+                color: '#B45309',
+                fontWeight: 800,
+                fontSize: '1.2rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 0.75rem',
+                border: '2px solid #E5E7EB',
+              }}
+            >
               3
             </div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff' }}>{topThree[2].name}</h3>
-            <p style={{ fontSize: '0.75rem', color: '#9cd4b5', marginBottom: '0.75rem' }}>{topThree[2].college}</p>
-            <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#34d399' }}>
-              {topThree[2].points} <span style={{ fontSize: '0.8rem', color: '#9cd4b5' }}>XP</span>
-            </span>
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', fontSize: '0.75rem', color: '#fbbf24' }}>
+            <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: '#F3F4F6', color: '#1F2937', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.5rem', border: '2px solid #E5E7EB' }}>
+              {topThree[2].name.charAt(0)}
+            </div>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#1F2937' }}>{topThree[2].name}</h3>
+            <p style={{ fontSize: '0.78rem', color: '#6B7280', marginBottom: '0.75rem' }}>{topThree[2].college}</p>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#16A34A' }}>
+              {topThree[2].points} <span style={{ fontSize: '0.85rem', color: '#065F46' }}>XP</span>
+            </div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.5rem', fontSize: '0.78rem', color: '#B45309', fontWeight: 600 }}>
               <Flame size={14} /> {topThree[2].streak} Days Streak
             </div>
           </div>
         </div>
       )}
 
-      {/* Full Leaderboard Table */}
-      <div className="data-table-container">
+      {/* Full Leaderboard Table with Current User Row Highlight */}
+      <div style={{ background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '3rem', color: '#34d399' }}>
-            Fetching latest rankings...
+          <div>
+            <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #E5E7EB', background: '#F8F6F1', fontWeight: 600, color: '#4B5563', fontSize: '0.85rem' }}>
+              Updating live leaderboard standings...
+            </div>
+            <TableRowSkeleton />
+            <TableRowSkeleton />
+            <TableRowSkeleton />
+            <TableRowSkeleton />
+            <TableRowSkeleton />
           </div>
         ) : (
-          <table className="custom-table leaderboard-table">
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr>
-                <th style={{ width: '70px' }}>Rank</th>
-                <th>Candidate Name</th>
-                <th>College / Institute</th>
-                <th>Target Company Track</th>
-                <th>Daily Streak</th>
-                <th>Problems Solved</th>
-                <th style={{ textAlign: 'right' }}>Total XP</th>
+              <tr style={{ background: '#F8F6F1', borderBottom: '1px solid #E5E7EB' }}>
+                <th style={{ padding: '0.9rem 1.25rem', textAlign: 'left', width: '70px', fontSize: '0.82rem', fontWeight: 700, color: '#4B5563' }}>Rank</th>
+                <th style={{ padding: '0.9rem 1rem', textAlign: 'left', fontSize: '0.82rem', fontWeight: 700, color: '#4B5563' }}>Candidate</th>
+                <th style={{ padding: '0.9rem 1rem', textAlign: 'left', fontSize: '0.82rem', fontWeight: 700, color: '#4B5563' }}>College / Institute</th>
+                <th style={{ padding: '0.9rem 1rem', textAlign: 'left', fontSize: '0.82rem', fontWeight: 700, color: '#4B5563' }}>Target Track</th>
+                <th style={{ padding: '0.9rem 1rem', textAlign: 'left', fontSize: '0.82rem', fontWeight: 700, color: '#4B5563' }}>Streak</th>
+                <th style={{ padding: '0.9rem 1rem', textAlign: 'left', fontSize: '0.82rem', fontWeight: 700, color: '#4B5563' }}>Problems</th>
+                <th style={{ padding: '0.9rem 1.25rem', textAlign: 'right', fontSize: '0.82rem', fontWeight: 700, color: '#4B5563' }}>XP</th>
               </tr>
             </thead>
             <tbody>
-              {leaderboard.map((cand) => (
-                <tr
-                  key={cand._id}
-                  className={cand.isCurrentUser ? 'current-user-row' : ''}
-                >
-                  <td>
-                    <span className={`rank-badge ${cand.rank === 1 ? 'rank-1' : cand.rank === 2 ? 'rank-2' : cand.rank === 3 ? 'rank-3' : 'rank-other'}`}>
-                      {cand.rank}
-                    </span>
-                  </td>
-                  <td style={{ fontWeight: 600, color: cand.isCurrentUser ? '#34d399' : '#f0fdf4' }}>
-                    {cand.name} {cand.isCurrentUser && <span style={{ fontSize: '0.7rem', color: '#34d399', fontWeight: 700 }}>(You)</span>}
-                  </td>
-                  <td style={{ color: '#cbd5e1' }}>{cand.college}</td>
-                  <td>
-                    <span style={{ fontSize: '0.78rem', color: '#34d399', fontWeight: 600 }}>
-                      {cand.targetCompany}
-                    </span>
-                  </td>
-                  <td>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#fbbf24', fontWeight: 600 }}>
-                      <Flame size={14} /> {cand.streak} Days
-                    </span>
-                  </td>
-                  <td style={{ color: '#9cd4b5' }}>{cand.problemsSolved} Solved</td>
-                  <td style={{ textAlign: 'right', fontWeight: 800, color: '#34d399', fontSize: '1rem' }}>
-                    {cand.points} XP
-                  </td>
-                </tr>
-              ))}
+              {leaderboard.map((cand) => {
+                const isUser = cand.isCurrentUser;
+                return (
+                  <tr
+                    key={cand._id}
+                    style={{
+                      background: isUser ? '#DCFCE7' : 'transparent',
+                      borderBottom: '1px solid',
+                      borderColor: isUser ? '#86EFAC' : '#F3F4F6',
+                      transition: 'background-color 0.15s ease',
+                    }}
+                  >
+                    <td style={{ padding: '0.95rem 1.25rem' }}>
+                      <span
+                        style={{
+                          width: '30px',
+                          height: '30px',
+                          borderRadius: '50%',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 800,
+                          fontSize: '0.82rem',
+                          background: cand.rank === 1 ? '#FEF3C7' : cand.rank === 2 ? '#DCFCE7' : cand.rank === 3 ? '#F3F4F6' : '#F9FAFB',
+                          color: cand.rank === 1 ? '#B45309' : cand.rank === 2 ? '#16A34A' : cand.rank === 3 ? '#4B5563' : '#6B7280',
+                          border: cand.rank === 1 ? '1.5px solid #F59E0B' : '1px solid #E5E7EB',
+                        }}
+                      >
+                        {cand.rank}
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.95rem 1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                        <div
+                          style={{
+                            width: '34px',
+                            height: '34px',
+                            borderRadius: '50%',
+                            background: isUser ? '#16A34A' : '#E5E7EB',
+                            color: isUser ? '#FFFFFF' : '#1F2937',
+                            fontWeight: 700,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.82rem',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {cand.name ? cand.name.charAt(0).toUpperCase() : 'C'}
+                        </div>
+                        <div>
+                          <strong style={{ fontSize: '0.92rem', color: isUser ? '#065F46' : '#1F2937' }}>
+                            {cand.name}
+                          </strong>
+                          {isUser && (
+                            <span style={{ marginLeft: '0.5rem', fontSize: '0.72rem', background: '#16A34A', color: 'white', padding: '0.15rem 0.5rem', borderRadius: '999px', fontWeight: 700 }}>
+                              YOU
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: '0.95rem 1rem', color: '#4B5563', fontSize: '0.85rem' }}>{cand.college}</td>
+                    <td style={{ padding: '0.95rem 1rem' }}>
+                      <span style={{ fontSize: '0.78rem', color: '#16A34A', fontWeight: 600, background: isUser ? '#FFFFFF' : '#DCFCE7', padding: '0.2rem 0.55rem', borderRadius: '999px' }}>
+                        {cand.targetCompany}
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.95rem 1rem' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#B45309', fontWeight: 600, fontSize: '0.85rem' }}>
+                        <Flame size={14} /> {cand.streak} Days
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.95rem 1rem', color: '#4B5563', fontSize: '0.85rem' }}>
+                      {cand.problemsSolved} Solved
+                    </td>
+                    <td style={{ padding: '0.95rem 1.25rem', textAlign: 'right', fontWeight: 800, color: '#16A34A', fontSize: '1.05rem' }}>
+                      {cand.points} XP
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
