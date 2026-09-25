@@ -47,6 +47,22 @@ const Login = () => {
     setErrorMsg('');
   };
 
+  const handleInstantDemoLogin = async () => {
+    setFormData({
+      email: 'candidate@test.com',
+      password: 'password123',
+    });
+    setErrorMsg('');
+    setLoading(true);
+    const res = await login('candidate@test.com', 'password123');
+    setLoading(false);
+    if (res.success) {
+      navigate(redirectPath, { replace: true });
+    } else {
+      setErrorMsg(res.message || 'Connecting to secure server... Please try once more.');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.email || !formData.password) {
@@ -63,7 +79,7 @@ const Login = () => {
     if (res.success) {
       navigate(redirectPath, { replace: true });
     } else {
-      setErrorMsg(res.message);
+      setErrorMsg(res.message || 'Login failed. Please verify credentials.');
     }
   };
 
@@ -139,29 +155,34 @@ const Login = () => {
         {/* Right Side: Interactive Login Form */}
         <div className="auth-form-panel">
           <div className="form-card">
-            <div className="form-header">
-              <div className="form-logo-mobile">
-                <Layers className="logo-icon-small" size={24} />
-                <span>Campus2Career</span>
-              </div>
-              <h2 className="form-title">Welcome Back</h2>
+            <div className="form-header text-center">
+              <Link to="/launch" className="auth-brand-logo-link" title="Campus 2 Career Launch Page">
+                <img 
+                  src="/logo.png" 
+                  alt="Campus 2 Career" 
+                  className="auth-brand-logo-img" 
+                />
+              </Link>
+              <h2 className="form-title">Candidate Sign In</h2>
               <p className="form-subtitle">
-                Enter your credentials to continue your preparation streak.
+                Enter your credentials or launch the instant demo to track your preparation.
               </p>
             </div>
 
             {/* Quick Demo Autofill Pill */}
             <div className="demo-autofill-box">
               <div className="demo-info">
-                <span className="demo-tag">Instant Test</span>
-                <span className="demo-text">Want to test immediately?</span>
+                <span className="demo-tag">Instant Access</span>
+                <span className="demo-text">Candidate Demo Ready</span>
               </div>
               <button 
                 type="button" 
-                onClick={handleAutofillDemo} 
+                onClick={handleInstantDemoLogin} 
+                disabled={loading}
                 className="btn-demo-autofill"
+                title="Instant 1-click access with preloaded progress"
               >
-                ⚡ Use Demo Account
+                ⚡ 1-Click Demo Sign In
               </button>
             </div>
 

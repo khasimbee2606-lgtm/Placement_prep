@@ -35,14 +35,14 @@ const Sidebar = ({ mobileOpen, setMobileOpen }) => {
 
   return (
     <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
-      {/* Brand Header */}
-      <NavLink to="/landing" className="sidebar-brand" style={{ textDecoration: 'none' }}>
-        <div className="brand-icon-box">
-          <GraduationCap size={22} />
+      {/* Brand Header with Uploaded Logo */}
+      <NavLink to="/launch" className="sidebar-brand" style={{ textDecoration: 'none' }} title="Campus 2 Career Launch Page">
+        <div className="sidebar-logo-container">
+          <img src="/logo.png" alt="Campus 2 Career" className="sidebar-logo-img" />
         </div>
         <div>
-          <span className="brand-title">Campus2Career</span>
-          <span className="brand-subtitle">Placement Preparation Platform</span>
+          <span className="brand-title">Campus <span style={{ color: '#10b981' }}>2</span> Career</span>
+          <span className="brand-subtitle">Track &bull; Analyze &bull; Achieve</span>
         </div>
       </NavLink>
 

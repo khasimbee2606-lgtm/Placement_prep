@@ -56,17 +56,18 @@ const Landing = () => {
           ========================================================================= */}
       <header className="landing-navbar">
         <div className="landing-nav-container">
-          <Link to="/" className="landing-logo">
-            <div className="landing-logo-icon">
-              <GraduationCap size={22} color="#ffffff" />
+          <Link to="/launch" className="landing-logo" title="Campus 2 Career Launch Page">
+            <div className="landing-logo-container">
+              <img src="/logo.png" alt="Campus 2 Career" className="navbar-logo-img" />
             </div>
             <div className="landing-logo-text">
-              <span className="landing-brand-name">Campus<span className="landing-brand-green">2</span>Career</span>
-              <span className="landing-brand-tag">Placement Accelerator</span>
+              <span className="landing-brand-name">Campus <span className="landing-brand-green">2</span> Career</span>
+              <span className="landing-brand-tag">Track &bull; Analyze &bull; Achieve</span>
             </div>
           </Link>
 
           <nav className="landing-nav-links">
+            <Link to="/launch" className="landing-nav-link" style={{ color: '#059669', fontWeight: 700 }}>Launch Page</Link>
             <a href="#features" className="landing-nav-link">Features</a>
             <a href="#modules" className="landing-nav-link">Modules</a>
             <a href="#roadmap" className="landing-nav-link">Roadmap</a>

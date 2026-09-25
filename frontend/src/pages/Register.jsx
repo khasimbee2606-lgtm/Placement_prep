@@ -180,11 +180,14 @@ const Register = () => {
         {/* Right Side: Registration Form */}
         <div className="auth-form-panel">
           <div className="form-card">
-            <div className="form-header">
-              <div className="form-logo-mobile">
-                <Layers className="logo-icon-small" size={24} />
-                <span>Campus2Career</span>
-              </div>
+            <div className="form-header text-center">
+              <Link to="/launch" className="auth-brand-logo-link" title="Campus 2 Career Launch Page">
+                <img 
+                  src="/logo.png" 
+                  alt="Campus 2 Career" 
+                  className="auth-brand-logo-img" 
+                />
+              </Link>
               <h2 className="form-title">Create Candidate Account</h2>
               <p className="form-subtitle">
                 Set up your personal profile to track preparation progress.

@@ -101,13 +101,40 @@ export const loginUser = async (req, res) => {
       });
     }
 
+    const cleanEmail = email.toLowerCase().trim();
+
+    // Guarantee demo account is auto-provisioned and active
+    if (cleanEmail === 'candidate@test.com') {
+      let demoUser = await User.findOne({ email: cleanEmail }).select('+password');
+      if (!demoUser) {
+        demoUser = await User.create({
+          name: 'Demo Candidate',
+          email: 'candidate@test.com',
+          password: 'password123',
+          college: 'Campus2Career Institute of Technology',
+          targetCompany: 'Google, Amazon & TCS Digital',
+          graduationYear: 2026,
+          streak: 15,
+          points: 950,
+          problemsSolved: 68,
+          lastActiveDate: new Date(),
+        });
+      } else if (password === 'password123') {
+        const matches = await demoUser.matchPassword('password123');
+        if (!matches) {
+          demoUser.password = 'password123';
+          await demoUser.save();
+        }
+      }
+    }
+
     // Find user by email and explicitly select password field
-    const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
+    const user = await User.findOne({ email: cleanEmail }).select('+password');
 
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password. Please try again.',
+        message: 'Invalid email or password. Please try again or click Use Demo Account.',
       });
     }
 
@@ -116,7 +143,7 @@ export const loginUser = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password. Please try again.',
+        message: 'Invalid email or password. Please check your credentials.',
       });
     }
 

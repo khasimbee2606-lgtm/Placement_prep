@@ -6,6 +6,7 @@ import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 
 import Landing from './pages/Landing';
+import Launch from './pages/Launch';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -37,9 +38,11 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          {/* Public Landing & Authentication Routes */}
+          {/* Public Landing, Launch & Authentication Routes */}
           <Route path="/" element={<Landing />} />
           <Route path="/landing" element={<Landing />} />
+          <Route path="/launch" element={<Launch />} />
+          <Route path="/welcome" element={<Launch />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
