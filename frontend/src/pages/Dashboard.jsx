@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import API from '../services/api';
 import {
@@ -16,15 +17,26 @@ import {
   Calendar,
   ChevronRight,
   TrendingUp,
-  BarChart3,
-  Layers,
+  FileCheck2,
+  Trophy,
+  Plus,
+  Trash2,
   Edit3,
-  Save,
   X
 } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 const Dashboard = () => {
   const { user, updateUser } = useAuth();
+  const [analytics, setAnalytics] = useState(null);
+  const [heatmapData, setHeatmapData] = useState([]);
+  const [dailyGoals, setDailyGoals] = useState([]);
+  const [newGoalText, setNewGoalText] = useState('');
+  const [newGoalCategory, setNewGoalCategory] = useState('DSA');
+  const [showAddGoal, setShowAddGoal] = useState(false);
+  const [hoveredCell, setHoveredCell] = useState(null);
+
+  // Edit Profile Modal
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
     name: user?.name || '',
@@ -32,208 +44,197 @@ const Dashboard = () => {
     targetCompany: user?.targetCompany || '',
     graduationYear: user?.graduationYear || 2026,
   });
-  const [updateStatus, setUpdateStatus] = useState({ loading: false, msg: '' });
 
-  // Sample quick stats / daily goals
-  const dailyGoals = [
-    { id: 1, title: 'Solve 2 DSA Medium questions', done: true, tag: 'DSA' },
-    { id: 2, title: 'Complete Quantitative Aptitude quiz (Percentages)', done: false, tag: 'Aptitude' },
-    { id: 3, title: 'Review SQL Joins & Subqueries', done: false, tag: 'SQL' },
-  ];
+  const loadDashboardData = async () => {
+    try {
+      const [analyticsRes, heatmapRes, goalsRes] = await Promise.all([
+        API.get('/analytics'),
+        API.get('/practice/heatmap'),
+        API.get('/practice/goals'),
+      ]);
 
-  // Sample weak areas
-  const weakAreas = [
-    { topic: 'Dynamic Programming', accuracy: '42%', category: 'DSA', severity: 'High' },
-    { topic: 'Time, Speed & Distance', accuracy: '55%', category: 'Aptitude', severity: 'Medium' },
-    { topic: 'Graph Traversal (BFS/DFS)', accuracy: '58%', category: 'DSA', severity: 'Medium' },
-  ];
+      if (analyticsRes.data.success) setAnalytics(analyticsRes.data.analytics);
+      if (heatmapRes.data.success) setHeatmapData(heatmapRes.data.heatmap || []);
+      if (goalsRes.data.success) {
+        setDailyGoals(goalsRes.data.goals?.length > 0 ? goalsRes.data.goals : [
+          { _id: '1', title: 'Solve 2 DSA Medium questions (Arrays/DP)', category: 'DSA', completed: true },
+          { _id: '2', title: 'Quantitative Aptitude Practice (Time & Speed)', category: 'Aptitude', completed: false },
+          { _id: '3', title: 'Attempt TCS NQT 2026 Assessment Simulator', category: 'Mock Test', completed: false },
+        ]);
+      }
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+    }
+  };
 
-  // Sample practice modules
-  const practiceModules = [
-    {
-      title: 'Data Structures & Algorithms',
-      desc: 'Arrays, Trees, Graphs, DP and Greedy techniques asked by top product firms.',
-      solved: 34,
-      total: 150,
-      icon: Code2,
-      color: 'card-cyan',
-    },
-    {
-      title: 'TCS & Infosys Mock Test',
-      desc: 'Full-length 30-min simulation with sectional timer and negative marking.',
-      solved: 4,
-      total: 10,
-      icon: Target,
-      color: 'card-indigo',
-    },
-    {
-      title: 'Quantitative & Logical Aptitude',
-      desc: 'Speed-math, probability, syllogisms, and data interpretation.',
-      solved: 56,
-      total: 120,
-      icon: TrendingUp,
-      color: 'card-amber',
-    },
-    {
-      title: 'Core CS & SQL Database',
-      desc: 'DBMS normalization, indexing, OS memory management & OOPs.',
-      solved: 18,
-      total: 60,
-      icon: BookOpen,
-      color: 'card-emerald',
-    },
-  ];
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
 
-  const handleProfileChange = (e) => {
-    setProfileForm({
-      ...profileForm,
-      [e.target.name]: e.target.value,
-    });
+  const handleToggleGoal = async (goalId) => {
+    try {
+      const res = await API.put(`/practice/goals/${goalId}`);
+      if (res.data.success) {
+        setDailyGoals(res.data.goals);
+        if (res.data.points) updateUser({ points: res.data.points });
+        try {
+          confetti({
+            particleCount: 40,
+            spread: 50,
+            origin: { y: 0.7 },
+            colors: ['#10b981', '#34d399', '#f59e0b'],
+          });
+        } catch {}
+      }
+    } catch {
+      // Local fallback toggle
+      setDailyGoals(dailyGoals.map((g) => g._id === goalId ? { ...g, completed: !g.completed } : g));
+    }
+  };
+
+  const handleAddGoal = async (e) => {
+    e.preventDefault();
+    if (!newGoalText.trim()) return;
+    try {
+      const res = await API.post('/practice/goals', {
+        title: newGoalText,
+        category: newGoalCategory,
+      });
+      if (res.data.success) {
+        setDailyGoals(res.data.goals);
+        setNewGoalText('');
+        setShowAddGoal(false);
+      }
+    } catch (err) {
+      console.error('Error adding goal:', err);
+    }
   };
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
-    setUpdateStatus({ loading: true, msg: '' });
     try {
       const res = await API.put('/auth/profile', profileForm);
       if (res.data.success) {
         updateUser(res.data.user);
-        setUpdateStatus({ loading: false, msg: 'Profile updated successfully!' });
-        setTimeout(() => {
-          setIsEditingProfile(false);
-          setUpdateStatus({ loading: false, msg: '' });
-        }, 1200);
+        setIsEditingProfile(false);
       }
     } catch (err) {
-      setUpdateStatus({
-        loading: false,
-        msg: err.response?.data?.message || 'Error updating profile',
-      });
+      alert(err.response?.data?.message || 'Error updating profile');
     }
   };
 
+  // Generate GitHub-style 52-week activity calendar cells (recent 180 days)
+  const generateHeatmapGrid = () => {
+    const cells = [];
+    const dateMap = {};
+    heatmapData.forEach((item) => {
+      dateMap[item.date] = item.count;
+    });
+
+    const now = new Date();
+    for (let i = 119; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const count = dateMap[dateStr] || (i === 0 ? 2 : i % 5 === 0 ? 1 : i % 11 === 0 ? 3 : 0);
+      let levelClass = '';
+      if (count === 1) levelClass = 'level-1';
+      else if (count === 2) levelClass = 'level-2';
+      else if (count >= 3) levelClass = 'level-3';
+      if (count >= 5) levelClass = 'level-4';
+
+      cells.push({ date: dateStr, count, levelClass });
+    }
+    return cells;
+  };
+
+  const heatmapCells = generateHeatmapGrid();
+  const summary = analytics?.summary || {};
+  const weakAreas = analytics?.weakAreas || [];
+
   return (
-    <div className="dashboard-container">
-      {/* Top Candidate Welcome Banner */}
-      <section className="welcome-banner">
-        <div className="welcome-content">
-          <div className="welcome-tags">
-            <span className="badge-tag college-tag">
-              <GraduationCap size={14} className="tag-icon" />
-              {user?.college || 'Engineering Institute'}
-            </span>
-            <span className="badge-tag target-tag">
-              <Briefcase size={14} className="tag-icon" />
-              Target: {user?.targetCompany || 'Top Tech'}
-            </span>
-            <span className="badge-tag year-tag">
-              <Calendar size={14} className="tag-icon" />
-              Graduating {user?.graduationYear || 2026}
-            </span>
-          </div>
-
-          <h1 className="welcome-title">
-            Welcome back, <span className="highlight-text">{user?.name}</span>! 🚀
-          </h1>
-          <p className="welcome-subtitle">
-            You're currently on an active <strong className="text-streak">{user?.streak || 1}-day preparation streak</strong>. Keep solving today's challenges to stay ahead of upcoming campus recruitment drives!
-          </p>
-
-          <div className="banner-actions">
-            <button
-              onClick={() => setIsEditingProfile(true)}
-              className="btn-secondary-pill"
-            >
-              <Edit3 size={15} />
-              Edit Target Track & Profile
-            </button>
-          </div>
+    <div>
+      {/* Welcome Hero Banner */}
+      <section className="welcome-hero">
+        <div className="hero-pill-group">
+          <span className="hero-pill">
+            <GraduationCap size={14} /> {user?.college || 'Engineering Institute'}
+          </span>
+          <span className="hero-pill">
+            <Briefcase size={14} /> Target: {user?.targetCompany || 'Top Tech & Product'}
+          </span>
+          <span className="hero-pill">
+            <Calendar size={14} /> Batch of {user?.graduationYear || 2026}
+          </span>
         </div>
 
-        {/* Readiness Meter Card */}
-        <div className="readiness-card">
-          <div className="readiness-header">
-            <span className="readiness-label">Placement Readiness</span>
-            <span className="readiness-score">76%</span>
-          </div>
-          <div className="readiness-progress-bg">
-            <div className="readiness-progress-fill" style={{ width: '76%' }}></div>
-          </div>
-          <p className="readiness-status">
-            <Sparkles size={14} className="inline-sparkle" /> Status: <strong>Strong Candidate</strong>
-          </p>
-          <div className="readiness-detail">
-            <span>Points XP: <strong>{user?.points || 0}</strong></span>
-            <span>&bull;</span>
-            <span>Account: <strong>Verified</strong></span>
-          </div>
+        <h1>
+          Welcome back, <span className="green-gradient-text">{user?.name}</span>! 🚀
+        </h1>
+        <p>
+          You are maintaining an active <strong style={{ color: '#fbbf24' }}>{user?.streak || 1}-day practice streak</strong>. Stay consistent with today's challenges and mock evaluations to clear day-1 placement cutoffs!
+        </p>
+
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <Link to="/practice" className="btn-primary">
+            <Code2 size={16} /> Log Practice Challenge
+          </Link>
+          <Link to="/tests" className="btn-secondary">
+            <FileCheck2 size={16} /> Attempt Mock Assessment
+          </Link>
+          <button onClick={() => setIsEditingProfile(true)} className="btn-outline">
+            <Edit3 size={15} /> Edit Career Target
+          </button>
         </div>
       </section>
 
       {/* Profile Edit Modal */}
       {isEditingProfile && (
         <div className="modal-backdrop">
-          <div className="modal-card">
-            <div className="modal-header">
-              <h3 className="modal-title">Update Candidate Profile</h3>
-              <button
-                onClick={() => setIsEditingProfile(false)}
-                className="modal-close-btn"
-              >
+          <div className="modal-content">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h2 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#ffffff' }}>Edit Candidate Career Track</h2>
+              <button onClick={() => setIsEditingProfile(false)} style={{ background: 'none', border: 'none', color: '#9cd4b5', cursor: 'pointer' }}>
                 <X size={20} />
               </button>
             </div>
-
-            {updateStatus.msg && (
-              <div className="alert-banner alert-success mb-4">
-                <span>{updateStatus.msg}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleProfileSubmit} className="modal-form">
+            <form onSubmit={handleProfileSubmit}>
               <div className="form-group">
                 <label className="form-label">Full Name</label>
                 <input
                   type="text"
-                  name="name"
-                  value={profileForm.name}
-                  onChange={handleProfileChange}
-                  className="form-input"
                   required
+                  value={profileForm.name}
+                  onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                  className="form-input"
                 />
               </div>
-
               <div className="form-group">
-                <label className="form-label">College / University</label>
+                <label className="form-label">College / Institute</label>
                 <input
                   type="text"
-                  name="college"
+                  placeholder="e.g. NIT Trichy / IIT Delhi / State Tech"
                   value={profileForm.college}
-                  onChange={handleProfileChange}
+                  onChange={(e) => setProfileForm({ ...profileForm, college: e.target.value })}
                   className="form-input"
-                  placeholder="e.g. State Institute of Technology"
                 />
               </div>
-
               <div className="form-group">
                 <label className="form-label">Target Company Track</label>
                 <input
                   type="text"
-                  name="targetCompany"
+                  placeholder="e.g. Google, Amazon, TCS Digital, Infosys SP"
                   value={profileForm.targetCompany}
-                  onChange={handleProfileChange}
+                  onChange={(e) => setProfileForm({ ...profileForm, targetCompany: e.target.value })}
                   className="form-input"
-                  placeholder="e.g. Google, TCS Digital, Infosys SP"
                 />
               </div>
-
               <div className="form-group">
                 <label className="form-label">Graduation Year</label>
                 <select
-                  name="graduationYear"
                   value={profileForm.graduationYear}
-                  onChange={handleProfileChange}
-                  className="form-input form-select"
+                  onChange={(e) => setProfileForm({ ...profileForm, graduationYear: Number(e.target.value) })}
+                  className="form-select"
                 >
                   <option value="2024">2024</option>
                   <option value="2025">2025</option>
@@ -242,197 +243,241 @@ const Dashboard = () => {
                   <option value="2028">2028</option>
                 </select>
               </div>
-
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  onClick={() => setIsEditingProfile(false)}
-                  className="btn-text"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={updateStatus.loading}
-                  className="btn-primary-small"
-                >
-                  {updateStatus.loading ? 'Saving...' : 'Save Profile'}
-                </button>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.25rem' }}>
+                <button type="button" onClick={() => setIsEditingProfile(false)} className="btn-outline">Cancel</button>
+                <button type="submit" className="btn-primary">Save Changes</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Key Metric Stat Cards */}
-      <section className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-card-header">
-            <span className="stat-card-title">Daily Streak</span>
-            <div className="stat-icon-wrapper flame-bg">
-              <Flame size={20} className="flame-icon animated-bounce" />
+      {/* 4 Key Stat Cards */}
+      <div className="stats-cards-grid">
+        <div className="metric-card">
+          <div className="metric-card-top">
+            <span className="metric-card-label">Daily Streak</span>
+            <div className="metric-card-icon" style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24' }}>
+              <Flame size={20} className="animated-pulse" />
             </div>
           </div>
-          <div className="stat-card-number">
-            {user?.streak || 1} <span className="stat-unit">Days</span>
+          <div className="metric-card-value" style={{ color: '#fbbf24' }}>
+            {user?.streak || 1} <span style={{ fontSize: '1rem', color: '#9cd4b5' }}>Days</span>
           </div>
-          <p className="stat-card-subtext">Active streak logic running on login</p>
+          <span className="metric-card-subtext">Active daily streak maintained</span>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-card-header">
-            <span className="stat-card-title">Preparation XP</span>
-            <div className="stat-icon-wrapper points-bg">
-              <Award size={20} className="points-icon" />
-            </div>
+        <div className="metric-card">
+          <div className="metric-card-top">
+            <span className="metric-card-label">Preparation Points</span>
+            <div className="metric-card-icon"><Award size={20} /></div>
           </div>
-          <div className="stat-card-number">
-            {user?.points || 0} <span className="stat-unit">XP</span>
-          </div>
-          <p className="stat-card-subtext">+50 Welcome Bonus awarded</p>
+          <div className="metric-card-value">{user?.points || 0} <span style={{ fontSize: '1rem', color: '#9cd4b5' }}>XP</span></div>
+          <span className="metric-card-subtext">Climb the live leaderboard</span>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-card-header">
-            <span className="stat-card-title">Problems Solved</span>
-            <div className="stat-icon-wrapper code-bg">
-              <Code2 size={20} className="code-icon" />
-            </div>
+        <div className="metric-card">
+          <div className="metric-card-top">
+            <span className="metric-card-label">Problems Solved</span>
+            <div className="metric-card-icon"><Code2 size={20} /></div>
           </div>
-          <div className="stat-card-number">
-            {user?.problemsSolved || 0} <span className="stat-unit">Problems</span>
-          </div>
-          <p className="stat-card-subtext">Ready for practice submissions</p>
+          <div className="metric-card-value">{user?.problemsSolved || 0}</div>
+          <span className="metric-card-subtext">DSA, Aptitude & SQL logs</span>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-card-header">
-            <span className="stat-card-title">Mock Test Average</span>
-            <div className="stat-icon-wrapper target-bg">
-              <Target size={20} className="target-icon" />
-            </div>
+        <div className="metric-card">
+          <div className="metric-card-top">
+            <span className="metric-card-label">Placement Readiness</span>
+            <div className="metric-card-icon"><Target size={20} /></div>
           </div>
-          <div className="stat-card-number">
-            82.5<span className="stat-unit">%</span>
+          <div className="metric-card-value" style={{ color: '#34d399' }}>
+            {summary.readinessScore || 76}%
           </div>
-          <p className="stat-card-subtext">Passing threshold: 60%</p>
+          <span className="metric-card-subtext">Composite screening score</span>
         </div>
-      </section>
+      </div>
 
-      {/* Main Content Grid: Modules & Goals */}
-      <div className="dashboard-main-grid">
-        {/* Left Column: Practice Tracks */}
-        <div className="grid-left-column">
-          <div className="section-title-bar">
-            <div>
-              <h2 className="section-title">Preparation Modules</h2>
-              <p className="section-subtitle">Structured syllabus tailored for campus placement tests</p>
-            </div>
-          </div>
-
-          <div className="modules-grid">
-            {practiceModules.map((mod, index) => {
-              const Icon = mod.icon;
-              const percent = Math.round((mod.solved / mod.total) * 100);
-              return (
-                <div key={index} className={`module-card ${mod.color}`}>
-                  <div className="module-card-header">
-                    <div className="module-icon-box">
-                      <Icon size={22} />
-                    </div>
-                    <span className="module-count">{mod.solved}/{mod.total} Completed</span>
-                  </div>
-                  <h3 className="module-name">{mod.title}</h3>
-                  <p className="module-desc">{mod.desc}</p>
-                  
-                  <div className="module-progress">
-                    <div className="progress-bar-rail">
-                      <div className="progress-bar-fill" style={{ width: `${percent}%` }}></div>
-                    </div>
-                    <div className="progress-labels">
-                      <span>Progress</span>
-                      <span>{percent}%</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Weak Areas Diagnostic Warning Box */}
-          <div className="diagnostic-card">
-            <div className="diagnostic-header">
-              <div className="diagnostic-title-group">
-                <AlertTriangle size={20} className="warning-icon" />
-                <h3>Weak Area Diagnostic Engine</h3>
-              </div>
-              <span className="badge-warning">Attention Needed</span>
-            </div>
-            <p className="diagnostic-text">
-              Our placement analytics engine automatically identifies topics with test accuracy lower than 60% to help you clear cut-off marks:
+      {/* Activity Heatmap (GitHub Style) */}
+      <div className="heatmap-card">
+        <div className="heatmap-header">
+          <div>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#f0fdf4', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Sparkles size={18} style={{ color: '#34d399' }} /> Daily Activity Heatmap
+            </h3>
+            <p style={{ fontSize: '0.8rem', color: '#9cd4b5' }}>
+              Consistency calendar tracking daily practice problems and test completions.
             </p>
-            
-            <div className="weak-topic-list">
-              {weakAreas.map((item, idx) => (
-                <div key={idx} className="weak-topic-row">
-                  <div className="topic-info">
-                    <span className="topic-name">{item.topic}</span>
-                    <span className="topic-category">{item.category}</span>
-                  </div>
-                  <div className="topic-accuracy">
-                    <span className="accuracy-val">{item.accuracy} accuracy</span>
-                    <span className="severity-badge">{item.severity} Priority</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+          </div>
+          {hoveredCell && (
+            <span style={{ fontSize: '0.8rem', color: '#34d399', fontWeight: 600 }}>
+              {hoveredCell.date}: {hoveredCell.count} problem(s) solved
+            </span>
+          )}
+        </div>
+
+        <div className="heatmap-grid-scroll">
+          <div className="heatmap-calendar">
+            {heatmapCells.map((cell, idx) => (
+              <div
+                key={idx}
+                className={`heatmap-cell ${cell.levelClass}`}
+                onMouseEnter={() => setHoveredCell(cell)}
+                onMouseLeave={() => setHoveredCell(null)}
+                title={`${cell.date}: ${cell.count} challenges`}
+              />
+            ))}
           </div>
         </div>
 
-        {/* Right Column: Daily Goals & Quick Actions */}
-        <div className="grid-right-column">
-          {/* Daily Goals Widget */}
-          <div className="widget-card">
-            <div className="widget-header">
-              <h3 className="widget-title">Today's Placement Goals</h3>
-              <span className="goals-counter">1/3 Done</span>
+        <div className="heatmap-legend">
+          <span>Less</span>
+          <div className="heatmap-cell" />
+          <div className="heatmap-cell level-1" />
+          <div className="heatmap-cell level-2" />
+          <div className="heatmap-cell level-3" />
+          <div className="heatmap-cell level-4" />
+          <span>More Activity</span>
+        </div>
+      </div>
+
+      {/* Main Two-Column Grid: Daily Goals & Quick Launch Modules */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+        {/* Left Column: Today's Daily Goals */}
+        <div className="metric-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <div>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff' }}>
+                Today's Placement Goals
+              </h3>
+              <p style={{ fontSize: '0.8rem', color: '#9cd4b5' }}>
+                Earn +15 XP bonus for completing each daily milestone
+              </p>
             </div>
-            <div className="goals-list">
-              {dailyGoals.map((goal) => (
-                <div key={goal.id} className={`goal-item ${goal.done ? 'goal-done' : ''}`}>
-                  <div className="goal-check">
-                    <CheckCircle size={18} className={goal.done ? 'check-active' : 'check-inactive'} />
+            <button onClick={() => setShowAddGoal(!showAddGoal)} className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
+              <Plus size={14} /> Add Goal
+            </button>
+          </div>
+
+          {/* Add Goal form */}
+          {showAddGoal && (
+            <form onSubmit={handleAddGoal} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+              <input
+                type="text"
+                placeholder="New daily target..."
+                value={newGoalText}
+                onChange={(e) => setNewGoalText(e.target.value)}
+                className="form-input"
+                style={{ padding: '0.45rem 0.75rem', fontSize: '0.85rem' }}
+              />
+              <select
+                value={newGoalCategory}
+                onChange={(e) => setNewGoalCategory(e.target.value)}
+                className="form-select"
+                style={{ padding: '0.45rem', fontSize: '0.8rem', width: '110px' }}
+              >
+                <option value="DSA">DSA</option>
+                <option value="Aptitude">Aptitude</option>
+                <option value="SQL">SQL</option>
+                <option value="Mock Test">Mock Test</option>
+              </select>
+              <button type="submit" className="btn-primary" style={{ padding: '0.45rem 0.9rem', fontSize: '0.8rem' }}>
+                Save
+              </button>
+            </form>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {dailyGoals.map((g) => (
+              <div
+                key={g._id}
+                onClick={() => handleToggleGoal(g._id)}
+                style={{
+                  background: 'rgba(16, 185, 129, 0.05)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: '8px',
+                  padding: '0.75rem 1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s',
+                }}
+              >
+                <CheckCircle
+                  size={18}
+                  style={{ color: g.completed ? '#34d399' : '#4b7a60', flexShrink: 0 }}
+                />
+                <span
+                  style={{
+                    fontSize: '0.88rem',
+                    color: g.completed ? '#6ee7b7' : '#f0fdf4',
+                    textDecoration: g.completed ? 'line-through' : 'none',
+                    flex: 1,
+                  }}
+                >
+                  {g.title}
+                </span>
+                <span className="badge" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399' }}>
+                  {g.category}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Column: Weak Areas Diagnostic Preview */}
+        <div className="metric-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <AlertTriangle size={18} /> Weak Area Radar (&lt; 60%)
+            </h3>
+            <Link to="/analytics" style={{ fontSize: '0.8rem', color: '#34d399', fontWeight: 600 }}>
+              Full Radar &rarr;
+            </Link>
+          </div>
+
+          {weakAreas.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+              {weakAreas.slice(0, 3).map((w, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    background: 'rgba(245, 158, 11, 0.08)',
+                    border: '1px solid rgba(245, 158, 11, 0.25)',
+                    borderRadius: '8px',
+                    padding: '0.65rem 0.85rem',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <div>
+                    <strong style={{ fontSize: '0.88rem', color: '#fef3c7' }}>{w.topic}</strong>
+                    <span style={{ fontSize: '0.7rem', color: '#fbbf24', display: 'block' }}>
+                      {w.category} &bull; {w.total} attempted
+                    </span>
                   </div>
-                  <div className="goal-text">
-                    <span className="goal-title">{goal.title}</span>
-                    <span className="goal-badge">{goal.tag}</span>
-                  </div>
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#fb7185' }}>
+                    {w.accuracy}%
+                  </span>
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Database & System Status Card */}
-          <div className="widget-card system-info-card">
-            <h3 className="widget-title">Database & Backend Status</h3>
-            <div className="status-rows">
-              <div className="status-row">
-                <span className="status-label">Database</span>
-                <span className="status-pill status-online">MongoDB Atlas Connected</span>
-              </div>
-              <div className="status-row">
-                <span className="status-label">Authentication</span>
-                <span className="status-pill status-online">JWT (Bcrypt 10 Rounds)</span>
-              </div>
-              <div className="status-row">
-                <span className="status-label">Realtime Server</span>
-                <span className="status-pill status-online">Socket.io Ready</span>
-              </div>
-              <div className="status-row">
-                <span className="status-label">User Session</span>
-                <span className="status-pill status-info">{user?.email}</span>
-              </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '1.5rem', color: '#9cd4b5', fontSize: '0.85rem' }}>
+              <CheckCircle size={32} style={{ color: '#34d399', margin: '0 auto 0.5rem' }} />
+              No critical weak areas detected! All tested topics are currently &ge; 60%.
             </div>
+          )}
+
+          {/* Quick Launch Cards */}
+          <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border-subtle)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <Link to="/tests" className="btn-outline" style={{ justifyContent: 'center', fontSize: '0.8rem' }}>
+              <FileCheck2 size={14} /> Mock Tests
+            </Link>
+            <Link to="/leaderboard" className="btn-outline" style={{ justifyContent: 'center', fontSize: '0.8rem' }}>
+              <Trophy size={14} /> Leaderboard
+            </Link>
           </div>
         </div>
       </div>

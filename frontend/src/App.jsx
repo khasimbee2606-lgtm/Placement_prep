@@ -1,11 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
+import Sidebar from './components/Sidebar';
+import Topbar from './components/Topbar';
+
+// Page components
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import PracticeTracker from './pages/PracticeTracker';
+import MockTests from './pages/MockTests';
+import Analytics from './pages/Analytics';
+import Leaderboard from './pages/Leaderboard';
 
 // Root redirect handler
 const RootRedirect = () => {
@@ -15,8 +22,8 @@ const RootRedirect = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="spinner-container">
-          <div className="spinner"></div>
-          <p className="loading-text">Loading Placement Hub...</p>
+          <div className="spinner" style={{ borderColor: 'rgba(16, 185, 129, 0.2)', borderTopColor: '#10b981' }}></div>
+          <p className="loading-text" style={{ color: '#34d399' }}>Securing Campus2Career session...</p>
         </div>
       </div>
     );
@@ -25,36 +32,92 @@ const RootRedirect = () => {
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />;
 };
 
+// Layout Wrapper with Sidebar & Topbar for Protected Pages
+const AppLayout = ({ children }) => {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  return (
+    <div className="app-container">
+      <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
+      <div className="main-viewport">
+        <Topbar toggleMobileSidebar={() => setMobileOpen(!mobileOpen)} />
+        <main className="content-area">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="app-wrapper">
-          <Navbar />
-          <main className="main-content">
-            <Routes>
-              {/* Home redirect */}
-              <Route path="/" element={<RootRedirect />} />
+        <Routes>
+          {/* Public Authentication Routes */}
+          <Route path="/" element={<RootRedirect />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-              {/* Public Auth Routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+          {/* Protected Routes (Authenticated Layout) */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Dashboard />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
 
-              {/* Protected Application Routes */}
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
+          <Route
+            path="/practice"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <PracticeTracker />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
 
-              {/* Fallback route */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
-        </div>
+          <Route
+            path="/tests"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <MockTests />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/analytics"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Analytics />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/leaderboard"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Leaderboard />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </Router>
     </AuthProvider>
   );

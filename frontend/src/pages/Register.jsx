@@ -183,7 +183,7 @@ const Register = () => {
             <div className="form-header">
               <div className="form-logo-mobile">
                 <Layers className="logo-icon-small" size={24} />
-                <span>PlacementPrep Pro</span>
+                <span>Campus2Career</span>
               </div>
               <h2 className="form-title">Create Candidate Account</h2>
               <p className="form-subtitle">

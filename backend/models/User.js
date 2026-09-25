@@ -1,6 +1,25 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+const goalSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  category: { type: String, default: 'General' },
+  completed: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+});
+
+const notificationSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  message: { type: String, required: true },
+  type: {
+    type: String,
+    enum: ['warning', 'info', 'success', 'streak', 'goal'],
+    default: 'info',
+  },
+  read: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+});
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -61,6 +80,8 @@ const userSchema = new mongoose.Schema(
       enum: ['user', 'admin'],
       default: 'user',
     },
+    dailyGoals: [goalSchema],
+    notifications: [notificationSchema],
   },
   {
     timestamps: true,

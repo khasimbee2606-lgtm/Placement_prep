@@ -5,7 +5,13 @@ import cors from 'cors';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
+
+// Route imports
 import authRoutes from './routes/authRoutes.js';
+import practiceRoutes from './routes/practiceRoutes.js';
+import testRoutes from './routes/testRoutes.js';
+import analyticsRoutes from './routes/analyticsRoutes.js';
+import leaderboardRoutes from './routes/leaderboardRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -16,7 +22,7 @@ connectDB();
 const app = express();
 const server = http.createServer(app);
 
-// Socket.io initialization for real-time leaderboard and mock test timers
+// Socket.io initialization for real-time leaderboard and test timers
 const io = new Server(server, {
   cors: {
     origin: [
@@ -53,34 +59,45 @@ if (process.env.NODE_ENV !== 'production') {
 io.on('connection', (socket) => {
   console.log(`[Socket.io] Client connected: ${socket.id}`);
 
+  // Test session heartbeat
+  socket.on('join_test_room', (data) => {
+    socket.join(`test_${data.testId}`);
+    console.log(`[Socket.io] User ${data.userName} joined test room: test_${data.testId}`);
+  });
+
   socket.on('disconnect', () => {
     console.log(`[Socket.io] Client disconnected: ${socket.id}`);
   });
 });
 
-// Pass socket.io to req for controllers if needed
+// Attach socket.io to req
 app.use((req, res, next) => {
   req.io = io;
   next();
 });
 
-// API Routes
+// Mount API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/practice', practiceRoutes);
+app.use('/api/tests', testRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'online',
-    message: 'Placement Preparation Tracker API is running smoothly',
+    message: 'Campus2Career API is running smoothly',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
+    modules: ['Authentication', 'Practice Tracker', 'Mock Tests', 'Analytics Engine', 'Leaderboard', 'Socket.io'],
   });
 });
 
 // Root welcome endpoint
 app.get('/', (req, res) => {
   res.json({
-    message: 'Welcome to Placement Preparation Tracker API',
+    message: 'Welcome to Campus2Career API',
     version: '1.0.0',
     documentation: '/api/health',
   });
