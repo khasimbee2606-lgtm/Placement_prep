@@ -9,7 +9,14 @@ class SocketService {
   init() {
     if (typeof window !== 'undefined' && window.io) {
       try {
-        this.socket = window.io(window.location.origin, {
+        let socketUrl = window.location.origin;
+        if (import.meta.env.VITE_BACKEND_URL) {
+          socketUrl = import.meta.env.VITE_BACKEND_URL;
+        } else if (import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL.startsWith('http')) {
+          socketUrl = import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '');
+        }
+
+        this.socket = window.io(socketUrl, {
           transports: ['websocket', 'polling'],
           reconnection: true,
           reconnectionAttempts: 5,

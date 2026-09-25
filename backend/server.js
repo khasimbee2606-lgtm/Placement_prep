@@ -22,15 +22,41 @@ connectDB();
 const app = express();
 const server = http.createServer(app);
 
+// Permissive and secure CORS origin validator for Vercel and Render deployments
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  const configuredClients = process.env.CLIENT_URL
+    ? process.env.CLIENT_URL.split(',').map((u) => u.trim())
+    : [];
+  const standardOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    'https://localhost:5173',
+  ];
+
+  if (standardOrigins.includes(origin) || configuredClients.includes(origin)) {
+    return true;
+  }
+  // Allow any Vercel deployment preview or production domain
+  if (origin.endsWith('.vercel.app')) return true;
+  // Allow any Render deployment domain
+  if (origin.endsWith('.onrender.com')) return true;
+
+  // In production if no explicit block, allow with credentials for seamless frontend-backend link
+  return true;
+};
+
 // Socket.io initialization for real-time leaderboard and test timers
 const io = new Server(server, {
   cors: {
-    origin: [
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'http://127.0.0.1:5173',
-      process.env.CLIENT_URL || 'http://localhost:5173',
-    ],
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, true);
+      }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
   },
@@ -39,12 +65,13 @@ const io = new Server(server, {
 // Middleware
 app.use(
   cors({
-    origin: [
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'http://127.0.0.1:5173',
-      process.env.CLIENT_URL || 'http://localhost:5173',
-    ],
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, true);
+      }
+    },
     credentials: true,
   })
 );

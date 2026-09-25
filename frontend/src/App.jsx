@@ -5,7 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 
-// Page components
+import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -14,24 +14,6 @@ import MockTests from './pages/MockTests';
 import Analytics from './pages/Analytics';
 import Leaderboard from './pages/Leaderboard';
 import Profile from './pages/Profile';
-
-// Root redirect handler
-const RootRedirect = () => {
-  const { isAuthenticated, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="spinner-container">
-          <div className="spinner" style={{ borderColor: 'rgba(16, 185, 129, 0.2)', borderTopColor: '#10b981' }}></div>
-          <p className="loading-text" style={{ color: '#34d399' }}>Securing Campus2Career session...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />;
-};
 
 // Layout Wrapper with Sidebar & Topbar for Protected Pages
 const AppLayout = ({ children }) => {
@@ -55,8 +37,9 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          {/* Public Authentication Routes */}
-          <Route path="/" element={<RootRedirect />} />
+          {/* Public Landing & Authentication Routes */}
+          <Route path="/" element={<Landing />} />
+          <Route path="/landing" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 

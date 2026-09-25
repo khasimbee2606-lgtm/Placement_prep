@@ -36,15 +36,15 @@ const Sidebar = ({ mobileOpen, setMobileOpen }) => {
   return (
     <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
       {/* Brand Header */}
-      <div className="sidebar-brand">
+      <NavLink to="/landing" className="sidebar-brand" style={{ textDecoration: 'none' }}>
         <div className="brand-icon-box">
-          <Layers size={22} />
+          <GraduationCap size={22} />
         </div>
         <div>
           <span className="brand-title">Campus2Career</span>
           <span className="brand-subtitle">Placement Preparation Platform</span>
         </div>
-      </div>
+      </NavLink>
 
       {/* Navigation Links */}
       <nav className="sidebar-nav">
