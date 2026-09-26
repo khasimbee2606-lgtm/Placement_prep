@@ -33,6 +33,7 @@ const isAllowedOrigin = (origin) => {
     'http://localhost:3000',
     'http://127.0.0.1:5173',
     'https://localhost:5173',
+    'https://placement-prep-tan.vercel.app',
     'https://placement-prep-myu8f6nap-sk-bala-khasim-bees-projects.vercel.app',
     'https://placement-prep-ku9x.onrender.com',
   ];
