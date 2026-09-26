@@ -137,7 +137,7 @@ npm.cmd run dev
 > - Frontend Application on: **`http://localhost:5173`**
 
 ### 2. Instant Demo Credentials
-- **URL**: [http://localhost:5173/login](http://localhost:5173/login)
+- **URL**: https://placement-prep-tan.vercel.app/?_vercel_share=R9rFEaTU7h3iX1Rp0Jglv9o1BFHaqSV5
 - Click **"⚡ Use Demo Account"** or enter:
   - **Email**: `candidate@test.com`
   - **Password**: `password123`
