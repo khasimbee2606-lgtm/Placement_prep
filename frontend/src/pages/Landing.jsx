@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import InteractiveMeshCanvas from '../components/InteractiveMeshCanvas';
+const InteractiveMeshCanvas = React.lazy(() => import('../components/InteractiveMeshCanvas'));
 import {
   Sparkles,
   ArrowRight,
@@ -109,8 +109,10 @@ const Landing = () => {
           HERO SECTION (Interactive 3D Net Canvas + Dynamic Visuals)
           ========================================================================= */}
       <section className="landing-hero-section">
-        {/* Dynamic Canvas Background (Vanta/ThreeJS net physics) */}
-        <InteractiveMeshCanvas />
+        {/* Dynamic Canvas Background (Sylva - Living Green style, lazy-loaded) */}
+        <React.Suspense fallback={<div style={{ position: 'absolute', inset: 0 }} />}>
+          <InteractiveMeshCanvas />
+        </React.Suspense>
 
         <div className="landing-hero-container">
           {/* Animated Announcement Pill */}
@@ -123,8 +125,8 @@ const Landing = () => {
 
           {/* Main Hero Headline */}
           <h1 className="landing-hero-title">
-            From Campus Classrooms to{' '}
-            <span className="landing-gradient-text">Top-Tier Tech Offers</span>
+            Prepare Smarter.{' '}
+            <span className="landing-gradient-text">Get Hired Faster</span>
           </h1>
 
           {/* Subtitle */}
@@ -136,7 +138,7 @@ const Landing = () => {
 
           {/* Hero Action Buttons */}
           <div className="landing-hero-actions">
-            <Link to="/register" className="landing-btn-hero-primary">
+            <Link to="/register" className="landing-btn-hero-primary cta-glow">
               <Zap size={18} />
               <span>Start Preparing Free</span>
               <ArrowRight size={18} />

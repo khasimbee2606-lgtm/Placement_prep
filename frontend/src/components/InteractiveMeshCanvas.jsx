@@ -2,9 +2,10 @@ import React, { useEffect, useRef } from 'react';
 
 /**
  * InteractiveMeshCanvas
- * High-performance 3D-inspired dynamic particle mesh & wave canvas
- * Inspired by Vanta.js (net/topology) and ReactBits interactive backgrounds.
- * Uses emerald green nodes, dynamic connection lines, and responsive mouse physics.
+ * Inspired by "Sylva – Living Green" modern aesthetic.
+ * Ultra-lightweight 2D Canvas featuring floating luminous green particles,
+ * organic depth layers, soft connections, and subtle mouse physics.
+ * Optimized for 60fps performance without heavy WebGL runtimes.
  */
 const InteractiveMeshCanvas = () => {
   const canvasRef = useRef(null);
@@ -14,66 +15,73 @@ const InteractiveMeshCanvas = () => {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     let animationFrameId;
+    let isVisible = true;
+
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
-    // Particle pool setup
-    const particleCount = Math.min(Math.floor((width * height) / 12000), 85);
+    // Living Green palette
+    const colors = [
+      { fill: '#16A34A', glow: 'rgba(22, 163, 74, 0.4)' },
+      { fill: '#22C55E', glow: 'rgba(34, 197, 94, 0.45)' },
+      { fill: '#065F46', glow: 'rgba(6, 95, 70, 0.35)' },
+      { fill: '#86EFAC', glow: 'rgba(134, 239, 172, 0.5)' },
+    ];
+
+    // Minimal particle count (strictly lightweight)
+    const particleCount = Math.min(Math.floor((width * height) / 16000), 55);
     const particles = [];
+
     const mouse = {
       x: width / 2,
       y: height / 3,
       targetX: width / 2,
       targetY: height / 3,
-      radius: 160,
-      active: false,
+      radius: 170,
     };
 
-    class Particle {
+    class LivingParticle {
       constructor() {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
-        this.baseX = this.x;
-        this.baseY = this.y;
-        this.vx = (Math.random() - 0.5) * 0.7;
-        this.vy = (Math.random() - 0.5) * 0.7;
-        this.size = Math.random() * 2.5 + 1.2;
-        this.depth = Math.random() * 0.8 + 0.2; // 3D depth layer
+        this.vx = (Math.random() - 0.5) * 0.45;
+        this.vy = (Math.random() - 0.5) * 0.45;
+        this.depth = Math.random() * 0.7 + 0.3; // 3D depth layer
+        this.baseSize = (Math.random() * 2.2 + 1.2) * this.depth;
+        this.colorObj = colors[Math.floor(Math.random() * colors.length)];
         this.pulse = Math.random() * Math.PI * 2;
-        this.pulseSpeed = 0.02 + Math.random() * 0.02;
-        this.color = Math.random() > 0.4 ? '#10b981' : Math.random() > 0.5 ? '#34d399' : '#059669';
+        this.pulseSpeed = 0.015 + Math.random() * 0.015;
       }
 
       update() {
-        // Natural ambient drift
         this.x += this.vx * this.depth;
         this.y += this.vy * this.depth;
         this.pulse += this.pulseSpeed;
 
-        // Bounce on boundaries
-        if (this.x < 0 || this.x > width) this.vx *= -1;
-        if (this.y < 0 || this.y > height) this.vy *= -1;
+        if (this.x < 0) this.x = width;
+        else if (this.x > width) this.x = 0;
+        if (this.y < 0) this.y = height;
+        else if (this.y > height) this.y = 0;
 
-        // Mouse interactive physics
+        // Interactive organic displacement on mouse proximity
         const dx = mouse.x - this.x;
         const dy = mouse.y - this.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+        const dist = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance < mouse.radius) {
-          const force = (1 - distance / mouse.radius) * 3 * this.depth;
-          const angle = Math.atan2(dy, dx);
-          this.x -= Math.cos(angle) * force;
-          this.y -= Math.sin(angle) * force;
+        if (dist < mouse.radius && dist > 0) {
+          const force = (1 - dist / mouse.radius) * 2 * this.depth;
+          this.x -= (dx / dist) * force;
+          this.y -= (dy / dist) * force;
         }
       }
 
       draw() {
-        const currentSize = this.size + Math.sin(this.pulse) * 0.6;
+        const size = this.baseSize + Math.sin(this.pulse) * 0.4;
         ctx.save();
         ctx.beginPath();
-        ctx.arc(this.x, this.y, Math.max(currentSize, 0.8), 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.shadowColor = 'rgba(16, 185, 129, 0.45)';
+        ctx.arc(this.x, this.y, Math.max(size, 0.8), 0, Math.PI * 2);
+        ctx.fillStyle = this.colorObj.fill;
+        ctx.shadowColor = this.colorObj.glow;
         ctx.shadowBlur = 8 * this.depth;
         ctx.fill();
         ctx.restore();
@@ -81,93 +89,68 @@ const InteractiveMeshCanvas = () => {
     }
 
     for (let i = 0; i < particleCount; i++) {
-      particles.push(new Particle());
+      particles.push(new LivingParticle());
     }
 
-    // Resize handler
     const handleResize = () => {
       if (!canvas) return;
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
     };
 
-    // Mouse move handler
     const handleMouseMove = (e) => {
       const rect = canvas.getBoundingClientRect();
       mouse.targetX = e.clientX - rect.left;
       mouse.targetY = e.clientY - rect.top;
-      mouse.active = true;
     };
 
-    const handleMouseLeave = () => {
-      mouse.active = false;
-      mouse.targetX = width / 2;
-      mouse.targetY = height / 3;
+    window.addEventListener('resize', handleResize, { passive: true });
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+
+    // Pause rendering when tab is hidden to ensure zero performance overhead
+    const handleVisibilityChange = () => {
+      isVisible = !document.hidden;
+      if (isVisible) loop();
     };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseleave', handleMouseLeave);
+    const maxLineDist = 135;
 
-    // Dynamic 3D undulating wave grid in the lower backdrop
-    let waveTick = 0;
+    const loop = () => {
+      if (!isVisible) return;
 
-    const render = () => {
-      waveTick += 0.015;
       ctx.clearRect(0, 0, width, height);
 
-      // Smooth mouse easing
-      mouse.x += (mouse.targetX - mouse.x) * 0.08;
-      mouse.y += (mouse.targetY - mouse.y) * 0.08;
+      // Mouse easing
+      mouse.x += (mouse.targetX - mouse.x) * 0.06;
+      mouse.y += (mouse.targetY - mouse.y) * 0.06;
 
-      // Draw subtle warm glowing ambient orb near mouse
-      const ambientGlow = ctx.createRadialGradient(
+      // Soft living green radial aura around mouse
+      const aura = ctx.createRadialGradient(
         mouse.x,
         mouse.y,
-        10,
+        0,
         mouse.x,
         mouse.y,
-        mouse.radius * 1.5
+        mouse.radius * 1.6
       );
-      ambientGlow.addColorStop(0, 'rgba(16, 185, 129, 0.12)');
-      ambientGlow.addColorStop(0.5, 'rgba(52, 211, 153, 0.04)');
-      ambientGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
-      ctx.fillStyle = ambientGlow;
+      aura.addColorStop(0, 'rgba(22, 163, 74, 0.07)');
+      aura.addColorStop(0.6, 'rgba(220, 252, 231, 0.03)');
+      aura.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.fillStyle = aura;
       ctx.fillRect(0, 0, width, height);
 
-      // Draw undulating geometric sine ribbons across the lower section
-      ctx.save();
-      ctx.lineWidth = 1;
-      const ribbonY = height * 0.65;
-      for (let r = 0; r < 3; r++) {
-        ctx.beginPath();
-        const rOffset = r * 35;
-        ctx.strokeStyle = `rgba(16, 185, 129, ${0.08 - r * 0.02})`;
-        for (let x = 0; x <= width; x += 20) {
-          const y =
-            ribbonY +
-            rOffset +
-            Math.sin(x * 0.003 + waveTick + r * 0.7) * 28 +
-            Math.cos(x * 0.006 - waveTick * 0.6) * 16;
-          if (x === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-      }
-      ctx.restore();
-
-      // Connect near particles with emerald lines
+      // Connect filaments between close living nodes
+      ctx.lineWidth = 0.8;
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
           const dy = particles[i].y - particles[j].y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
-          const maxDist = 130;
-          if (dist < maxDist) {
-            const alpha = (1 - dist / maxDist) * 0.22 * particles[i].depth;
-            ctx.strokeStyle = `rgba(16, 185, 129, ${alpha})`;
-            ctx.lineWidth = 0.8 * particles[i].depth;
+          if (dist < maxLineDist) {
+            const alpha = (1 - dist / maxLineDist) * 0.16 * particles[i].depth;
+            ctx.strokeStyle = `rgba(22, 163, 74, ${alpha})`;
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
@@ -176,35 +159,21 @@ const InteractiveMeshCanvas = () => {
         }
       }
 
-      // Connect particles to mouse pointer if close
+      // Update and draw particles
       for (let i = 0; i < particles.length; i++) {
-        const dx = mouse.x - particles[i].x;
-        const dy = mouse.y - particles[i].y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist < mouse.radius) {
-          const alpha = (1 - dist / mouse.radius) * 0.35;
-          ctx.strokeStyle = `rgba(52, 211, 153, ${alpha})`;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(mouse.x, mouse.y);
-          ctx.lineTo(particles[i].x, particles[i].y);
-          ctx.stroke();
-        }
-
         particles[i].update();
         particles[i].draw();
       }
 
-      animationFrameId = requestAnimationFrame(render);
+      animationFrameId = requestAnimationFrame(loop);
     };
 
-    render();
+    loop();
 
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseleave', handleMouseLeave);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       cancelAnimationFrame(animationFrameId);
     };
   }, []);
@@ -212,6 +181,7 @@ const InteractiveMeshCanvas = () => {
   return (
     <canvas
       ref={canvasRef}
+      className="mesh-canvas"
       style={{
         position: 'absolute',
         top: 0,
@@ -219,8 +189,7 @@ const InteractiveMeshCanvas = () => {
         width: '100%',
         height: '100%',
         pointerEvents: 'none',
-        zIndex: 0,
-        opacity: 0.88,
+        zIndex: 1,
       }}
     />
   );

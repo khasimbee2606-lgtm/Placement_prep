@@ -110,7 +110,7 @@ const Launch = () => {
             Campus <span className="text-emerald">2</span> Career
           </h1>
           <p className="launch-tagline">
-            Track &bull; Analyze &bull; Achieve
+            Prepare Smarter &bull; Get Hired Faster
           </p>
 
           <p className="launch-lead-caption">
@@ -121,7 +121,7 @@ const Launch = () => {
 
           {/* Primary Action Group - Directs to Login */}
           <div className="launch-action-group">
-            <Link to="/login" className="btn-launch-get-started" id="launch-get-started-btn">
+            <Link to="/login" className="btn-launch-get-started cta-glow" id="launch-get-started-btn">
               <span>Get Started</span>
               <ArrowRight size={20} />
             </Link>
